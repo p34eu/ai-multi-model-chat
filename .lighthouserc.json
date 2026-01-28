@@ -2,8 +2,6 @@
   "ci": {
     "collect": {
       "numberOfRuns": 3,
-      "startServerCommand": "npm start",
-      "startServerReadyPattern": "AI server running on port 3003",
       "url": ["http://localhost:3003"]
     },
     "assert": {
