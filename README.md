@@ -11,7 +11,8 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 ## 🚀 Features
 
-- **Multiple AI Models**: Support for various models (Llama, Gemma, Qwen, Mixtral, etc.)
+- **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, and Google AI
+- **Multiple AI Models**: Support for various models (Llama, Gemma, Qwen, Mixtral, GPT, Claude, Gemini, etc.)
 - **Real-time Comparison**: Simultaneous querying of all models
 - **Performance Comparison**: Response time tracking and speed indicators
 - **Query History**: Saving and reviewing previous questions
@@ -26,7 +27,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 - **Backend**: Node.js, Express.js
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **AI Integration**: Groq SDK
+- **AI Integration**: Multi-provider support (Groq, OpenAI, Anthropic, Google AI)
 - **Images**: Sharp for favicon generation
 - **Tests**: Node.js built-in test runner
 
@@ -43,10 +44,22 @@ cd ai-multi-model-chat
 npm install
 ```
 
-3. Create a `.env` file with your Groq API key:
+3. Create a `.env` file with your API keys (at least one provider required):
 ```env
-GROQ_API_KEY=your_api_key_here
+# Groq (Fast inference, Llama/Gemma models)
+GROQ_API_KEY=your_groq_api_key_here
+
+# OpenAI (GPT models) - Optional
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Anthropic (Claude models) - Optional
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Google AI (Gemini models) - Optional
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 ```
+
+**Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
 
 4. Start the application:
 ```bash

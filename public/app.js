@@ -148,15 +148,27 @@ function getModelIcon(id) {
     gemma: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#FFD700"/></svg>`,
     qwen: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#FF4500"/></svg>`,
     mixtral: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#00CED1"/></svg>`,
+    gpt: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#10a37f"/></svg>`,
+    claude: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d97706"/></svg>`,
+    gemini: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#4285f4"/></svg>`,
     default: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#3b82f6"/></svg>`
   };
 
   if (!id || typeof id !== "string") return icons.default;
-  const low = id.toLowerCase();
-  if (low.includes("llama")) return icons.llama;
-  if (low.includes("gemma")) return icons.gemma;
-  if (low.includes("qwen")) return icons.qwen;
-  if (low.includes("mixtral")) return icons.mixtral;
+
+  // Remove provider prefixes for icon detection
+  const cleanId = id.toLowerCase()
+    .replace(/^openai-/, '')
+    .replace(/^anthropic-/, '')
+    .replace(/^google-/, '');
+
+  if (cleanId.includes("llama")) return icons.llama;
+  if (cleanId.includes("gemma")) return icons.gemma;
+  if (cleanId.includes("qwen")) return icons.qwen;
+  if (cleanId.includes("mixtral")) return icons.mixtral;
+  if (cleanId.includes("gpt")) return icons.gpt;
+  if (cleanId.includes("claude")) return icons.claude;
+  if (cleanId.includes("gemini")) return icons.gemini;
   return icons.default;
 }
 
@@ -273,6 +285,7 @@ function renderModelList() {
 
     list.forEach(m => {
       const id = m.id;
+      const provider = m.provider || "Unknown";
 
       const li = document.createElement("li");
       li.className = "modelItem";
@@ -282,16 +295,26 @@ function renderModelList() {
       icon.className = "modelIcon";
       icon.innerHTML = getModelIcon(id);
 
+      const nameContainer = document.createElement("div");
+      nameContainer.className = "modelNameContainer";
+
       const name = document.createElement("span");
       name.className = "modelName";
       name.textContent = id;
+
+      const providerBadge = document.createElement("span");
+      providerBadge.className = "modelProvider";
+      providerBadge.textContent = provider;
+
+      nameContainer.appendChild(name);
+      nameContainer.appendChild(providerBadge);
 
       const status = document.createElement("span");
       status.className = "modelStatus";
       status.textContent = "…";
 
       li.appendChild(icon);
-      li.appendChild(name);
+      li.appendChild(nameContainer);
       li.appendChild(status);
 
       li.onclick = () => selectModel(id);
