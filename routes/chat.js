@@ -43,9 +43,14 @@ router.post("/", async (req, res) => {
       return res.end();
     }
 
+    let buffer = "";
+
     response.body.on("data", chunk => {
-      const text = chunk.toString();
-      const lines = text.split("\n");
+      buffer += chunk.toString();
+      const lines = buffer.split("\n");
+
+      // Keep the last incomplete line in buffer
+      buffer = lines.pop() || "";
 
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
@@ -57,6 +62,8 @@ router.post("/", async (req, res) => {
           return res.end();
         }
 
+        if (payload === "") continue;
+
         try {
           const json = JSON.parse(payload);
           const token = json?.choices?.[0]?.delta?.content;
@@ -64,7 +71,7 @@ router.post("/", async (req, res) => {
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
         } catch (parseErr) {
-          console.error("JSON parse error:", parseErr);
+          console.error("JSON parse error:", parseErr, "Payload:", payload);
           continue;
         }
       }
