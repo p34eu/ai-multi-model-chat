@@ -9,6 +9,22 @@
     <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="style.css" />
 
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://z.p34.eu/" />
+    <meta property="og:title" content="AI Model Comparison Tool" />
+    <meta property="og:description" content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta property="og:image" content="https://z.p34.eu/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://z.p34.eu/" />
+    <meta property="twitter:title" content="AI Model Comparison Tool" />
+    <meta property="twitter:description" content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta property="twitter:image" content="https://z.p34.eu/twitter-card.png" />
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -100,7 +116,10 @@
         </aside>
 
         <section id="chatSection" aria-label="AI model responses and comparison">
-          <div id="typingIndicator" class="hidden" aria-live="polite" role="status">Моделите отговарят…</div>
+          <div id="typingIndicator" class="hidden" aria-live="polite" role="status">
+            <div class="loading-spinner"></div>
+            Моделите отговарят…
+          </div>
 
           <div id="selectedModelInfo" class="hidden" role="region" aria-label="Selected model information"></div>
           <div id="selectedModelAnswer" class="hidden" role="region" aria-label="Selected model response"></div>

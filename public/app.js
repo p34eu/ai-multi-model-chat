@@ -208,6 +208,39 @@ function getSpeedClass(time) {
   return "speedSlow";
 }
 
+function parseMarkdown(text) {
+  if (!text) return '';
+
+  // Escape HTML first
+  text = text.replace(/&/g, '&amp;')
+             .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;');
+
+  // Bold: **text** or __text__
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+  // Italic: *text* or _text_
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  text = text.replace(/_(.*?)_/g, '<em>$1</em>');
+
+  // Inline code: `text`
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Code blocks: ```text```
+  text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+  // Headers: # ## ###
+  text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+  text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+  text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+
+  // Line breaks
+  text = text.replace(/\n/g, '<br>');
+
+  return text;
+}
+
 function parseMarkdownTable(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return null; // Return null if not a table
@@ -612,13 +645,19 @@ async function askSingleModel(question, modelId) {
             const end = performance.now();
             const time = Math.round(end - start);
 
-            answers[modelId] = { text: `❌ Error: ${json.error}`, time, error: true };
+            // Choose icon based on error type
+            let icon = "❌";
+            if (json.error.includes("429") || json.error.toLowerCase().includes("quota")) {
+              icon = "💰";
+            }
+
+            answers[modelId] = { text: `${icon} Error: ${json.error}`, time, error: true };
 
             const status = document.querySelector(
               `.modelItem[data-model-id="${modelId}"] .modelStatus`
             );
             if (status) {
-              status.textContent = "❌";
+              status.textContent = icon;
               status.classList.add("error");
             }
 
@@ -705,7 +744,7 @@ function renderComparisonTable() {
     if (tableElement) {
       answerCell.appendChild(tableElement);
     } else {
-      answerCell.textContent = ans.text;
+      answerCell.innerHTML = parseMarkdown(ans.text);
     }
 
     row.appendChild(answerCell);

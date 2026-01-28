@@ -476,6 +476,23 @@ body {
   font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .hidden {
@@ -600,6 +617,51 @@ table.markdown-table th {
   background: var(--scrollbar);
   border-radius: 4px;
 }
+
+/* Markdown styling */
+.answer-cell strong {
+  font-weight: bold;
+  color: var(--accent);
+}
+
+.answer-cell em {
+  font-style: italic;
+  color: #fbbf24;
+}
+
+.answer-cell code {
+  background: rgba(59, 130, 246, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #93c5fd;
+}
+
+.answer-cell pre {
+  background: var(--bg-alt);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.answer-cell pre code {
+  background: none;
+  padding: 0;
+  color: var(--text);
+}
+
+.answer-cell h1, .answer-cell h2, .answer-cell h3 {
+  color: var(--accent);
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+.answer-cell h1 { font-size: 1.5em; }
+.answer-cell h2 { font-size: 1.3em; }
+.answer-cell h3 { font-size: 1.1em; }
 
 /* Mobile */
 
