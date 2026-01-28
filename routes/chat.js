@@ -12,9 +12,9 @@ const PROVIDERS = {
     chatUrl: "/chat/completions",
     get apiKey() { return process.env.GROQ_API_KEY; },
     get enabled() { return !!process.env.GROQ_API_KEY; },
-    modelPrefix: "",
+    modelPrefix: "groq-",
     formatMessage: (message, model) => ({
-      model,
+      model: model.replace("groq-", ""), // Remove prefix for API call
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
@@ -94,7 +94,7 @@ const PROVIDERS = {
   },
   cohere: {
     name: "Cohere",
-    baseUrl: "https://api.cohere.com/v1",
+    baseUrl: "https://api.cohere.com/v2",
     modelsUrl: "/models",
     chatUrl: "/chat",
     get apiKey() { return process.env.COHERE_API_KEY; },
@@ -102,7 +102,7 @@ const PROVIDERS = {
     modelPrefix: "cohere-",
     formatMessage: (message, model) => ({
       model: model.replace("cohere-", ""),
-      message: message.trim(),
+      messages: [{ role: "user", content: message.trim() }],
       temperature: 0.8,
       stream: true
     })
@@ -181,8 +181,45 @@ function handleStreamingResponse(provider, response, res) {
         }
       }
     });
+  } else if (provider.name === "Cohere") {
+    // Handle Cohere v2 streaming format (SSE)
+    response.body.on("data", chunk => {
+      buffer += chunk.toString();
+      const events = buffer.split("\n\n");
+
+      // Keep incomplete event in buffer
+      buffer = events.pop() || "";
+
+      for (const event of events) {
+        const lines = event.split("\n");
+        let eventType = "";
+        let data = "";
+
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            eventType = line.replace("event: ", "").trim();
+          } else if (line.startsWith("data: ")) {
+            data = line.replace("data: ", "").trim();
+          }
+        }
+
+        if (eventType === "content-delta" && data) {
+          try {
+            const json = JSON.parse(data);
+            const token = json?.delta?.message?.content?.text;
+            if (token) {
+              res.write(`data: ${JSON.stringify({ token })}\n\n`);
+            }
+          } catch (parseErr) {
+            continue;
+          }
+        } else if (data === "[DONE]") {
+          res.write("data: [DONE]\n\n");
+          return res.end();
+        }
+      }
+    });
   } else {
-    // Handle OpenAI-compatible streaming (Groq, OpenAI)
     response.body.on("data", chunk => {
       buffer += chunk.toString();
       const lines = buffer.split("\n");
@@ -281,7 +318,21 @@ router.post("/", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`${provider.name} API error:`, response.status, errorText);
-      res.write(`data: ${JSON.stringify({ error: `${provider.name} API request failed` })}\n\n`);
+      let errorDetails = `${provider.name} API request failed (Status: ${response.status})`;
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.error && errorJson.error.message) {
+          errorDetails += `: ${errorJson.error.message}`;
+        } else if (errorJson.message) {
+          errorDetails += `: ${errorJson.message}`;
+        }
+      } catch {
+        // If not JSON, include text if short
+        if (errorText.length < 200) {
+          errorDetails += `: ${errorText}`;
+        }
+      }
+      res.write(`data: ${JSON.stringify({ error: errorDetails })}\n\n`);
       return res.end();
     }
 

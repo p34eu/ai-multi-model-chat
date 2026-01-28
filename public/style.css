@@ -386,6 +386,11 @@ body {
   opacity: 1;
 }
 
+.modelStatus.error {
+  color: #ef4444 !important;
+  opacity: 1;
+}
+
 .speedFast {
   color: #22c55e !important;
 }

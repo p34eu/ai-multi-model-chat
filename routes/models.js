@@ -99,7 +99,7 @@ const PROVIDERS = {
   },
   cohere: {
     name: "Cohere",
-    baseUrl: "https://api.cohere.com/v1",
+    baseUrl: "https://api.cohere.com/v2",
     modelsUrl: "/models",
     chatUrl: "/chat",
     get apiKey() { return process.env.COHERE_API_KEY; },
@@ -107,7 +107,7 @@ const PROVIDERS = {
     modelPrefix: "cohere-",
     formatMessage: (message, model) => ({
       model: model.replace("cohere-", ""),
-      message: message.trim(),
+      messages: [{ role: "user", content: message.trim() }],
       temperature: 0.8,
       stream: true
     })
@@ -222,8 +222,13 @@ async function fetchProviderModels(provider) {
     } else if (provider.name === "Mistral" && data.data && Array.isArray(data.data)) {
       // Mistral returns array in data field
       models = data.data
-        .filter(m => (m.capabilities?.includes('completion') || m.id.includes('instruct') || m.id.includes('chat')) &&
-                     isValidChatModel(m.id))
+        .filter(m => {
+          // Check capabilities object for completion_chat
+          const hasCompletion = m.capabilities && m.capabilities.completion_chat === true;
+          
+          return (hasCompletion || m.id.includes('instruct') || m.id.includes('chat')) &&
+                 isValidChatModel(m.id);
+        })
         .map(m => ({
           id: `${provider.modelPrefix}${m.id}`,
           created: m.created || Date.now() / 1000,

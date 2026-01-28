@@ -377,7 +377,7 @@ function renderModelList() {
       providerBadge.textContent = provider;
 
       nameContainer.appendChild(name);
-      nameContainer.appendChild(providerBadge);
+   //   nameContainer.appendChild(providerBadge);
 
       const status = document.createElement("span");
       status.className = "modelStatus";
@@ -431,7 +431,7 @@ function toggleAllProviders() {
   });
   
   localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
-  renderModels();
+  renderModelList();
 }
 
 document.getElementById("refreshModels").onclick = loadModels;
@@ -516,7 +516,14 @@ async function askAllModels(question) {
   selectedModelAnswerEl.classList.add("hidden");
 
   const tasks = models.map(m => askSingleModel(question, m.id));
-  await Promise.all(tasks);
+  const results = await Promise.allSettled(tasks);
+  
+  // Log any failed promises for debugging
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      console.error(`Model ${models[index].id} failed:`, result.reason);
+    }
+  });
 
   typingIndicator.classList.add("hidden");
   renderComparisonTable();
@@ -532,49 +539,121 @@ async function askAllModels(question) {
 async function askSingleModel(question, modelId) {
   const start = performance.now();
 
-  const response = await fetch("/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message: question, model: modelId })
-  });
+  try {
+    const response = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: question, model: modelId })
+    });
 
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
 
-  let fullAnswer = "";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
+    let fullAnswer = "";
+    let hasCompleted = false;
 
-    const chunk = decoder.decode(value, { stream: true });
-    const lines = chunk.split("\n");
-
-    for (const line of lines) {
-      if (!line.startsWith("data:")) continue;
-
-      const payload = line.replace("data:", "").trim();
-      if (payload === "[DONE]") {
-        const end = performance.now();
-        const time = Math.round(end - start);
-
-        answers[modelId] = { text: fullAnswer, time };
-
+    // Set a timeout for the request
+    const timeout = setTimeout(() => {
+      if (!hasCompleted) {
+        console.warn(`Timeout for model: ${modelId}`);
+        hasCompleted = true;
+        answers[modelId] = { text: "❌ Request timeout", time: Math.round(performance.now() - start), error: true };
+        
         const status = document.querySelector(
           `.modelItem[data-model-id="${modelId}"] .modelStatus`
         );
         if (status) {
-          status.textContent = "✓";
-          status.classList.add("answered", getSpeedClass(time));
+          status.textContent = "❌";
+          status.classList.add("error");
+        }
+      }
+    }, 30000); // 30 second timeout
+
+    while (!hasCompleted) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n");
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+
+        const payload = line.replace("data:", "").trim();
+        if (payload === "[DONE]") {
+          clearTimeout(timeout);
+          hasCompleted = true;
+          const end = performance.now();
+          const time = Math.round(end - start);
+
+          answers[modelId] = { text: fullAnswer, time };
+
+          const status = document.querySelector(
+            `.modelItem[data-model-id="${modelId}"] .modelStatus`
+          );
+          if (status) {
+            status.textContent = "✓";
+            status.classList.add("answered", getSpeedClass(time));
+          }
+
+          return;
         }
 
-        return;
-      }
+        try {
+          const json = JSON.parse(payload);
+          if (json.error) {
+            // Handle API errors
+            clearTimeout(timeout);
+            hasCompleted = true;
+            const end = performance.now();
+            const time = Math.round(end - start);
 
-      try {
-        const json = JSON.parse(payload);
-        if (json.token) fullAnswer += json.token;
-      } catch {}
+            answers[modelId] = { text: `❌ Error: ${json.error}`, time, error: true };
+
+            const status = document.querySelector(
+              `.modelItem[data-model-id="${modelId}"] .modelStatus`
+            );
+            if (status) {
+              status.textContent = "❌";
+              status.classList.add("error");
+            }
+
+            return;
+          }
+          if (json.token) fullAnswer += json.token;
+        } catch {}
+      }
+    }
+  } catch (error) {
+    const end = performance.now();
+    const time = Math.round(end - start);
+
+    answers[modelId] = { text: `❌ Network Error: ${error.message}`, time, error: true };
+
+    const status = document.querySelector(
+      `.modelItem[data-model-id="${modelId}"] .modelStatus`
+    );
+    if (status) {
+      status.textContent = "❌";
+      status.classList.add("error");
+    }
+  }
+
+  // Fallback: if no answer was stored, store a timeout error
+  if (!answers[modelId]) {
+    console.warn(`No answer stored for model: ${modelId}`);
+    answers[modelId] = { text: "❌ No response received", time: 0, error: true };
+    
+    const status = document.querySelector(
+      `.modelItem[data-model-id="${modelId}"] .modelStatus`
+    );
+    if (status) {
+      status.textContent = "❌";
+      status.classList.add("error");
     }
   }
 }
@@ -650,6 +729,12 @@ async function sendMessage() {
 sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
+});
+
+// Prevent form submission
+document.getElementById('questionArea').addEventListener('submit', e => {
+  e.preventDefault();
+  sendMessage();
 });
 
 // ===============================
