@@ -2,50 +2,98 @@
 <html lang="bg">
   <head>
     <meta charset="UTF-8" />
-    <title>AI Multi-Model</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta name="keywords" content="AI, artificial intelligence, model comparison, Llama, Gemma, Qwen, Mixtral, chatbots" />
+    <title>AI Model Comparison Tool - Compare Multiple AI Responses</title>
     <link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="style.css" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AI Model Comparison Tool",
+      "description": "Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking.",
+      "url": "https://z.p34.eu",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Real-time AI model comparison",
+        "Performance tracking",
+        "Multiple AI model support",
+        "Query history",
+        "Internationalization"
+      ]
+    }
+    </script>
   </head>
   <body>
+    <a href="#mainArea" class="skip-link">Skip to main content</a>
     <div id="app">
       <header id="topBar">
-        <div id="title">AI Multi-Model</div>        <div id="languageSwitcher">
-          <button id="langBg" class="lang-btn">BG</button>
-          <button id="langEn" class="lang-btn">EN</button>
-        </div>             <div id="questionArea">
-            <input
-              id="message"
-              type="text"
-              placeholder="Напиши въпрос, който всички модели да отговорят..."
-            />
-            <button id="sendBtn">Сравни всички модели</button>
-          </div>
+        <h1 id="title">AI Multi-Model</h1>
+        <nav id="languageSwitcher" aria-label="Language selection">
+          <button id="langBg" class="lang-btn" aria-label="Switch to Bulgarian">BG</button>
+          <button id="langEn" class="lang-btn" aria-label="Switch to English">EN</button>
+        </nav>
+        <form id="questionArea" role="search" aria-label="AI model comparison query">
+          <label for="message" class="sr-only">Enter your question for AI models</label>
+          <input
+            id="message"
+            type="text"
+            placeholder="Напиши въпрос, който всички модели да отговорят..."
+            aria-describedby="message-help"
+          />
+          <span id="message-help" class="sr-only">This question will be sent to all selected AI models for comparison</span>
+          <button id="sendBtn" type="submit">Сравни всички модели</button>
+        </form>
       </header>
 
       <main id="mainArea">
-        <aside id="sidePanel">
-          <div class="sectionHeader">
-            <h3>Модели</h3>
-            <button id="refreshModels" class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3a5 5 0 1 0 4.546 2.914"/><path d="M8 1v3l3 2"/></svg></button>
-          </div>
-          <ul id="modelList"></ul>
-          <div class="divider"></div>
-          <div class="sectionHeader">
-            <h3>История</h3>
-            <button id="clearHistory" class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h10"/><path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><path d="M4 3h8l-1-2H5L4 3z"/></svg></button>
-          </div>
-          <ul id="historyList"></ul>
+        <aside id="sidePanel" aria-label="Model selection and history">
+          <section class="models-section">
+            <div class="sectionHeader">
+              <h2>Модели</h2>
+              <button id="refreshModels" class="btn" aria-label="Refresh available models">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M8 3a5 5 0 1 0 4.546 2.914"/>
+                  <path d="M8 1v3l3 2"/>
+                </svg>
+              </button>
+            </div>
+            <ul id="modelList" aria-label="Available AI models"></ul>
+          </section>
+
+          <div class="divider" aria-hidden="true"></div>
+
+          <section class="history-section">
+            <div class="sectionHeader">
+              <h2>История</h2>
+              <button id="clearHistory" class="btn" aria-label="Clear search history">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 6h10"/>
+                  <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/>
+                  <path d="M4 3h8l-1-2H5L4 3z"/>
+                </svg>
+              </button>
+            </div>
+            <ul id="historyList" aria-label="Previous queries"></ul>
+          </section>
         </aside>
 
-        <section id="chatSection">
-     
+        <section id="chatSection" aria-label="AI model responses and comparison">
+          <div id="typingIndicator" class="hidden" aria-live="polite" role="status">Моделите отговарят…</div>
 
-          <div id="typingIndicator" class="hidden">Моделите отговарят…</div>
+          <div id="selectedModelInfo" class="hidden" role="region" aria-label="Selected model information"></div>
+          <div id="selectedModelAnswer" class="hidden" role="region" aria-label="Selected model response"></div>
 
-          <div id="selectedModelInfo" class="hidden"></div>
-          <div id="selectedModelAnswer" class="hidden"></div>
-
-          <div id="comparisonTable"></div>
+          <div id="comparisonTable" role="region" aria-label="AI model comparison results"></div>
         </section>
       </main>
     </div>
