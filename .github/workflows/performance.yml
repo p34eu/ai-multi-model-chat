@@ -22,7 +22,8 @@ jobs:
         run: npm ci
 
       - name: Start server
-        run: npm start &
+        run: |
+          GROQ_API_KEY=fake_key_for_testing npm start &
         env:
           GROQ_API_KEY: fake_key_for_testing
 
@@ -34,5 +35,5 @@ jobs:
         with:
           urls: http://localhost:3003
           configPath: .lighthouserc.json
-          uploadArtifacts: true
+          uploadArtifacts: false
           temporaryPublicStorage: true
