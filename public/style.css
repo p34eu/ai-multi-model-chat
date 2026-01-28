@@ -190,17 +190,22 @@ body {
   margin-bottom: 4px;
 }
 
-#refreshModels,.btn {
+.header-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+#refreshModels, #expandCollapseBtn, .btn {
   background: var(--panel);
-  /* border: 1px solid var(--border); */
   color: var(--text-muted);
   padding: 4px 8px;
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
+  border: none;
 }
 
-#refreshModels:hover,.btn:hover {
+#refreshModels:hover, #expandCollapseBtn:hover, .btn:hover {
   background: var(--accent-soft);
   color: var(--text);
 }
@@ -213,23 +218,118 @@ body {
   overflow-y: auto;
    
 }
+
 .divider {
   height: 1px;
   background: var(--border);
   margin: 10px 0;
 }
+
 #modelList {
   flex: 1;
   max-height: 55vh;
 }
+
+/* Provider groups */
+.providerGroup {
+  margin-bottom: 8px;
+}
+
 .modelGroupHeader {
-  margin-top: 12px;
-  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin: 0 0 4px 0;
   font-size: 12px;
   font-weight: bold;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  background: var(--bg-alt);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.15s;
+  user-select: none;
+}
+
+.modelGroupHeader:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.expandArrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+  display: inline-block;
+  min-width: 12px;
+}
+
+.providerModels {
+  margin-top: 4px;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Inactive provider styles */
+.providerGroup.inactive {
+  opacity: 0.7;
+}
+
+.modelGroupHeader.inactive {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.modelGroupHeader.inactive:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.inactiveBadge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 4px;
+  color: #fca5a5;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.inactiveMessage {
+  padding: 12px;
+  margin: 4px 0;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inactiveIcon {
+  font-size: 16px;
+}
+
+.inactiveMessage code {
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #fca5a5;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .modelItem {

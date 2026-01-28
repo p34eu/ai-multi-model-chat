@@ -65,12 +65,19 @@
           <section class="models-section">
             <div class="sectionHeader">
               <h2>Модели</h2>
-              <button id="refreshModels" class="btn" aria-label="Refresh available models">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M8 3a5 5 0 1 0 4.546 2.914"/>
-                  <path d="M8 1v3l3 2"/>
-                </svg>
-              </button>
+              <div class="header-buttons">
+                <button id="expandCollapseBtn" class="btn" aria-label="Expand or collapse all provider groups" title="Expand/Collapse All">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M4 6l4 4 4-4"/>
+                  </svg>
+                </button>
+                <button id="refreshModels" class="btn" aria-label="Refresh available models">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M8 3a5 5 0 1 0 4.546 2.914"/>
+                    <path d="M8 1v3l3 2"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <ul id="modelList" aria-label="Available AI models"></ul>
           </section>

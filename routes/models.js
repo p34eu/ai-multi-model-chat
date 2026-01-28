@@ -10,8 +10,8 @@ const PROVIDERS = {
     baseUrl: "https://api.groq.com/openai/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    apiKey: process.env.GROQ_API_KEY,
-    enabled: !!process.env.GROQ_API_KEY,
+    get apiKey() { return process.env.GROQ_API_KEY; },
+    get enabled() { return !!process.env.GROQ_API_KEY; },
     modelPrefix: "",
     formatMessage: (message, model) => ({
       model,
@@ -26,8 +26,8 @@ const PROVIDERS = {
     baseUrl: "https://api.openai.com/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    apiKey: process.env.OPENAI_API_KEY,
-    enabled: !!process.env.OPENAI_API_KEY,
+    get apiKey() { return process.env.OPENAI_API_KEY; },
+    get enabled() { return !!process.env.OPENAI_API_KEY; },
     modelPrefix: "openai-",
     formatMessage: (message, model) => ({
       model: model.replace("openai-", ""), // Remove prefix for API call
@@ -42,9 +42,13 @@ const PROVIDERS = {
     baseUrl: "https://api.anthropic.com/v1",
     modelsUrl: "/models",
     chatUrl: "/messages",
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    enabled: !!process.env.ANTHROPIC_API_KEY,
+    get apiKey() { return process.env.ANTHROPIC_API_KEY; },
+    get enabled() { return !!process.env.ANTHROPIC_API_KEY; },
     modelPrefix: "anthropic-",
+    getHeaders: (apiKey) => ({
+      "X-Api-Key": apiKey,
+      "anthropic-version": "2023-06-01"
+    }),
     formatMessage: (message, model) => ({
       model: model.replace("anthropic-", ""),
       max_tokens: 4096,
@@ -62,9 +66,10 @@ const PROVIDERS = {
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     modelsUrl: "/models",
     chatUrl: (model) => `/models/${model.replace("google-", "")}:streamGenerateContent`,
-    apiKey: process.env.GOOGLE_AI_API_KEY,
-    enabled: !!process.env.GOOGLE_AI_API_KEY,
+    get apiKey() { return process.env.GOOGLE_API_KEY; },
+    get enabled() { return !!process.env.GOOGLE_API_KEY; },
     modelPrefix: "google-",
+    useQueryAuth: true,
     formatMessage: (message, model) => ({
       contents: [{
         parts: [{ text: message.trim() }]
@@ -75,6 +80,37 @@ const PROVIDERS = {
         maxOutputTokens: 4096
       }
     })
+  },
+  mistral: {
+    name: "Mistral",
+    baseUrl: "https://api.mistral.ai/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() { return process.env.MISTRAL_API_KEY; },
+    get enabled() { return !!process.env.MISTRAL_API_KEY; },
+    modelPrefix: "mistral-",
+    formatMessage: (message, model) => ({
+      model: model.replace("mistral-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }]
+    })
+  },
+  cohere: {
+    name: "Cohere",
+    baseUrl: "https://api.cohere.com/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat",
+    get apiKey() { return process.env.COHERE_API_KEY; },
+    get enabled() { return !!process.env.COHERE_API_KEY; },
+    modelPrefix: "cohere-",
+    formatMessage: (message, model) => ({
+      model: model.replace("cohere-", ""),
+      message: message.trim(),
+      temperature: 0.8,
+      stream: true
+    })
   }
 };
 
@@ -82,21 +118,69 @@ let cachedModels = null;
 let cacheTime = 0;
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
+// Helper function to validate if a model can support chat/completion
+function isValidChatModel(modelId) {
+  if (!modelId || typeof modelId !== 'string') return false;
+  
+  const id = modelId.toLowerCase();
+  
+  // Exclude non-chat/completion models
+  const exclusions = [
+    'embedding', 'embed',
+    'moderation',
+    'edit',
+    'audio', 'whisper', 'tts', 'speech', 'transcribe',
+    'vision-only',
+    'instruct-light', 'small', 'tiny',
+    'davinci-002', 'davinci-003', // old models
+    'text-davinci', 'text-curie', 'text-babbage', 'text-ada', // legacy models
+    'gpt-3.5', // older, less capable
+    'claude-1', 'claude-1.3', 'claude-instant', // old anthropic models
+    'command-light', 'command-nightly', // older cohere models
+    'palm', 'bison', // deprecated google models
+    'mistral-tiny', 'mistral-small', // very old mistral
+    'experimental', 'preview', 'legacy',
+    'test', 'mock', 'demo',
+    'dall-e', 'image',
+    'code-search', 'search',
+    'similarity'
+  ];
+  
+  for (const exclusion of exclusions) {
+    if (id.includes(exclusion)) return false;
+  }
+  
+  // Include models that are chat/completion capable
+  const inclusions = [
+    'chat', 'gpt', 'claude', 'gemini', 'command', 'mistral',
+    'llama', 'qwen', 'mixtral', 'neural',
+    'instruct', 'colossus', 'aya'
+  ];
+  
+  return inclusions.some(inclusion => id.includes(inclusion));
+}
+
 // Helper function to fetch models from a provider
 async function fetchProviderModels(provider) {
   if (!provider.enabled) return [];
 
   try {
-    const url = `${provider.baseUrl}${provider.modelsUrl}`;
-    const headers = {
-      "Authorization": `Bearer ${provider.apiKey}`,
-      ...provider.headers
-    };
-
-    // Special handling for Google AI
-    if (provider.name === "Google AI") {
-      headers["x-goog-api-key"] = provider.apiKey;
-      delete headers.Authorization;
+    let url = `${provider.baseUrl}${provider.modelsUrl}`;
+    
+    // Google AI uses query parameter authentication
+    if (provider.useQueryAuth) {
+      url += `?key=${provider.apiKey}`;
+    }
+    
+    // Build headers based on provider  
+    let headers;
+    if (provider.getHeaders) {
+      headers = provider.getHeaders(provider.apiKey);
+    } else if (provider.useQueryAuth) {
+      // Google AI doesn't need Authorization header
+      headers = {};
+    } else {
+      headers = { Authorization: `Bearer ${provider.apiKey}` };
     }
 
     const response = await fetch(url, { headers });
@@ -111,8 +195,45 @@ async function fetchProviderModels(provider) {
     // Handle different response formats
     let models = [];
     if (provider.name === "Google AI" && data.models) {
+      // Google AI returns models with name field
       models = data.models
-        .filter(m => m.name && m.name.includes("gemini"))
+        .filter(m => m.name && m.supportedGenerationMethods && 
+                     m.supportedGenerationMethods.includes("generateContent") &&
+                     isValidChatModel(m.name))
+        .map(m => {
+          const modelName = m.name.replace('models/', '');
+          return {
+            id: `${provider.modelPrefix}${modelName}`,
+            created: Date.now() / 1000,
+            owner: provider.name.toLowerCase(),
+            provider: provider.name
+          };
+        });
+    } else if (provider.name === "Anthropic" && data.data && Array.isArray(data.data)) {
+      // Anthropic returns array in data field with different structure
+      models = data.data
+        .filter(m => m.type === "model" && isValidChatModel(m.id))
+        .map(m => ({
+          id: `${provider.modelPrefix}${m.id}`,
+          created: new Date(m.created_at).getTime() / 1000,
+          owner: provider.name.toLowerCase(),
+          provider: provider.name
+        }));
+    } else if (provider.name === "Mistral" && data.data && Array.isArray(data.data)) {
+      // Mistral returns array in data field
+      models = data.data
+        .filter(m => (m.capabilities?.includes('completion') || m.id.includes('instruct') || m.id.includes('chat')) &&
+                     isValidChatModel(m.id))
+        .map(m => ({
+          id: `${provider.modelPrefix}${m.id}`,
+          created: m.created || Date.now() / 1000,
+          owner: provider.name.toLowerCase(),
+          provider: provider.name
+        }));
+    } else if (provider.name === "Cohere" && data.models && Array.isArray(data.models)) {
+      // Cohere returns array in models field
+      models = data.models
+        .filter(m => !m.is_deprecated && m.endpoints?.includes('chat') && isValidChatModel(m.name))
         .map(m => ({
           id: `${provider.modelPrefix}${m.name}`,
           created: Date.now() / 1000,
@@ -120,12 +241,37 @@ async function fetchProviderModels(provider) {
           provider: provider.name
         }));
     } else if (data.data && Array.isArray(data.data)) {
-      models = data.data.map(m => ({
-        id: `${provider.modelPrefix}${m.id}`,
-        created: m.created || Date.now() / 1000,
-        owner: m.owned_by || provider.name.toLowerCase(),
-        provider: provider.name
-      }));
+      // OpenAI/Groq format
+      models = data.data
+        .filter(m => {
+          const modelId = m.id.toLowerCase();
+          
+          // Check if model is valid for chat
+          if (!isValidChatModel(modelId)) return false;
+          
+          // Additional filtering for OpenAI/Groq
+          if (modelId.includes('embedding')) return false;
+          if (modelId.includes('moderation')) return false;
+          if (modelId.includes('edit')) return false;
+          if (modelId.includes('audio')) return false;
+          if (modelId.includes('speech')) return false;
+          if (modelId.includes('dall-e')) return false;
+          if (modelId.includes('whisper')) return false;
+          
+          // Keep GPT-4 vision but filter other vision models
+          if (modelId.includes('vision') && !modelId.includes('gpt-4')) return false;
+          
+          // Exclude very old models
+          if (modelId.includes('curie') || modelId.includes('babbage') || modelId.includes('ada')) return false;
+          
+          return true;
+        })
+        .map(m => ({
+          id: `${provider.modelPrefix}${m.id}`,
+          created: m.created || Date.now() / 1000,
+          owner: m.owned_by || provider.name.toLowerCase(),
+          provider: provider.name
+        }));
     }
 
     return models;
@@ -137,8 +283,23 @@ async function fetchProviderModels(provider) {
 
 router.get("/", async (req, res) => {
   const now = Date.now();
+  
+  // Get provider status for all providers (needed both for cache and fresh requests)
+  const providerStatus = Object.entries(PROVIDERS).reduce((acc, [key, provider]) => {
+    acc[provider.name] = {
+      enabled: provider.enabled,
+      hasApiKey: !!provider.apiKey,
+      modelCount: cachedModels ? cachedModels.filter(m => m.provider === provider.name).length : 0
+    };
+    return acc;
+  }, {});
+  
   if (cachedModels && (now - cacheTime) < CACHE_DURATION) {
-    return res.json({ models: cachedModels });
+    // Update model counts in provider status
+    Object.keys(providerStatus).forEach(providerName => {
+      providerStatus[providerName].modelCount = cachedModels.filter(m => m.provider === providerName).length;
+    });
+    return res.json({ models: cachedModels, providers: providerStatus });
   }
 
   try {
@@ -149,6 +310,11 @@ router.get("/", async (req, res) => {
 
     const providerResults = await Promise.all(providerPromises);
     const allModels = providerResults.flat();
+
+    // Update provider status with actual model counts (already initialized at the top)
+    Object.keys(providerStatus).forEach(providerName => {
+      providerStatus[providerName].modelCount = allModels.filter(m => m.provider === providerName).length;
+    });
 
     // Sort models by provider and name
     const sortedModels = allModels
@@ -163,6 +329,7 @@ router.get("/", async (req, res) => {
     if (sortedModels.length === 0) {
       return res.json({
         models: [],
+        providers: providerStatus,
         warning: "No models available from any configured providers"
       });
     }
@@ -170,7 +337,10 @@ router.get("/", async (req, res) => {
     cachedModels = sortedModels;
     cacheTime = now;
 
-    res.json({ models: sortedModels });
+    res.json({ 
+      models: sortedModels,
+      providers: providerStatus
+    });
   } catch (error) {
     console.error("Error fetching models:", error);
     res.status(500).json({ error: "Failed to fetch models" });

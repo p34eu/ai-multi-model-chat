@@ -10,8 +10,8 @@ const PROVIDERS = {
     baseUrl: "https://api.groq.com/openai/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    apiKey: process.env.GROQ_API_KEY,
-    enabled: !!process.env.GROQ_API_KEY,
+    get apiKey() { return process.env.GROQ_API_KEY; },
+    get enabled() { return !!process.env.GROQ_API_KEY; },
     modelPrefix: "",
     formatMessage: (message, model) => ({
       model,
@@ -26,8 +26,8 @@ const PROVIDERS = {
     baseUrl: "https://api.openai.com/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    apiKey: process.env.OPENAI_API_KEY,
-    enabled: !!process.env.OPENAI_API_KEY,
+    get apiKey() { return process.env.OPENAI_API_KEY; },
+    get enabled() { return !!process.env.OPENAI_API_KEY; },
     modelPrefix: "openai-",
     formatMessage: (message, model) => ({
       model: model.replace("openai-", ""), // Remove prefix for API call
@@ -42,8 +42,8 @@ const PROVIDERS = {
     baseUrl: "https://api.anthropic.com/v1",
     modelsUrl: "/models",
     chatUrl: "/messages",
-    apiKey: process.env.ANTHROPIC_API_KEY,
-    enabled: !!process.env.ANTHROPIC_API_KEY,
+    get apiKey() { return process.env.ANTHROPIC_API_KEY; },
+    get enabled() { return !!process.env.ANTHROPIC_API_KEY; },
     modelPrefix: "anthropic-",
     formatMessage: (message, model) => ({
       model: model.replace("anthropic-", ""),
@@ -62,8 +62,8 @@ const PROVIDERS = {
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     modelsUrl: "/models",
     chatUrl: (model) => `/models/${model.replace("google-", "")}:streamGenerateContent`,
-    apiKey: process.env.GOOGLE_AI_API_KEY,
-    enabled: !!process.env.GOOGLE_AI_API_KEY,
+    get apiKey() { return process.env.GOOGLE_API_KEY; },
+    get enabled() { return !!process.env.GOOGLE_API_KEY; },
     modelPrefix: "google-",
     formatMessage: (message, model) => ({
       contents: [{
@@ -74,6 +74,37 @@ const PROVIDERS = {
         topP: 0.9,
         maxOutputTokens: 4096
       }
+    })
+  },
+  mistral: {
+    name: "Mistral",
+    baseUrl: "https://api.mistral.ai/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() { return process.env.MISTRAL_API_KEY; },
+    get enabled() { return !!process.env.MISTRAL_API_KEY; },
+    modelPrefix: "mistral-",
+    formatMessage: (message, model) => ({
+      model: model.replace("mistral-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }]
+    })
+  },
+  cohere: {
+    name: "Cohere",
+    baseUrl: "https://api.cohere.com/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat",
+    get apiKey() { return process.env.COHERE_API_KEY; },
+    get enabled() { return !!process.env.COHERE_API_KEY; },
+    modelPrefix: "cohere-",
+    formatMessage: (message, model) => ({
+      model: model.replace("cohere-", ""),
+      message: message.trim(),
+      temperature: 0.8,
+      stream: true
     })
   }
 };
@@ -103,14 +134,19 @@ function handleStreamingResponse(provider, response, res) {
 
       for (const line of lines) {
         if (!line.trim()) continue;
+        if (!line.startsWith("data: ")) continue;
+
+        const payload = line.replace("data: ", "").trim();
+        if (payload === "") continue;
 
         try {
-          const data = JSON.parse(line);
+          const data = JSON.parse(payload);
           if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             const token = data.candidates[0].content.parts[0].text;
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
         } catch (parseErr) {
+          // Skip invalid JSON chunks
           continue;
         }
       }
@@ -151,9 +187,11 @@ function handleStreamingResponse(provider, response, res) {
       buffer += chunk.toString();
       const lines = buffer.split("\n");
 
+      // Keep the last potentially incomplete line in buffer
       buffer = lines.pop() || "";
 
       for (const line of lines) {
+        if (!line.trim()) continue;
         if (!line.startsWith("data: ")) continue;
 
         const payload = line.replace("data: ", "").trim();
@@ -165,6 +203,9 @@ function handleStreamingResponse(provider, response, res) {
 
         if (payload === "") continue;
 
+        // Only parse if it looks like complete JSON
+        if (!payload.startsWith("{") || !payload.endsWith("}")) continue;
+
         try {
           const json = JSON.parse(payload);
           const token = json?.choices?.[0]?.delta?.content;
@@ -172,6 +213,7 @@ function handleStreamingResponse(provider, response, res) {
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
         } catch (parseErr) {
+          // Skip invalid JSON chunks
           continue;
         }
       }

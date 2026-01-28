@@ -11,25 +11,31 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 ## 🚀 Features
 
-- **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, and Google AI
-- **Multiple AI Models**: Support for various models (Llama, Gemma, Qwen, Mixtral, GPT, Claude, Gemini, etc.)
-- **Real-time Comparison**: Simultaneous querying of all models
+- **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, Google AI, Mistral, and Cohere
+- **Smart Model Filtering**: Automatically filters out non-chat models (embeddings, audio, vision-only, etc.) to show only chat-capable models
+- **Provider Status Indicators**: Visual indicators showing active providers (with API keys) and inactive providers (with setup instructions)
+- **Collapsible Provider Groups**: Organize and manage models by provider with expand/collapse functionality and state persistence
+- **Multiple AI Models**: Support for 64+ chat-capable models (Llama, Gemma, Qwen, Mixtral, GPT, Claude, Gemini, Mistral, Cohere, etc.)
+- **Real-time Comparison**: Simultaneous querying of all models with streaming responses
 - **Performance Comparison**: Response time tracking and speed indicators
 - **Query History**: Saving and reviewing previous questions
 - **Model Caching**: 10-minute cache for model data to improve performance
 - **Rate Limiting**: Security protection against excessive requests
 - **Markdown Support**: Automatic recognition and rendering of tables
-- **Internationalization**:  Bulgarian and English language support for UI
+- **Internationalization**: Bulgarian and English language support for UI
 - **Responsive Design**: Works on different devices
 - **Consistent Icons**: SVG icons for all elements
 
 ## 🛠️ Technologies
 
-- **Backend**: Node.js, Express.js
+- **Backend**: Node.js v20+, Express.js
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **AI Integration**: Multi-provider support (Groq, OpenAI, Anthropic, Google AI)
+- **AI Integration**: Multi-provider support (Groq, OpenAI, Anthropic, Google AI, Mistral, Cohere) with dynamic API key loading
+- **Model Filtering**: Intelligent filtering system to show only chat-capable models
+- **Authentication**: Provider-specific auth methods (Bearer tokens, custom headers, query parameters)
 - **Images**: Sharp for favicon generation
 - **Tests**: Node.js built-in test runner
+- **Process Management**: PM2 for production deployment
 
 ## 📦 Installation
 
@@ -56,7 +62,13 @@ OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 
 # Google AI (Gemini models) - Optional
-GOOGLE_AI_API_KEY=your_google_ai_api_key_here
+GOOGLE_API_KEY=your_google_ai_api_key_here
+
+# Mistral AI - Optional
+MISTRAL_API_KEY=your_mistral_api_key_here
+
+# Cohere - Optional
+COHERE_API_KEY=your_cohere_api_key_here
 ```
 
 **Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
@@ -89,15 +101,16 @@ This project uses GitHub Actions for continuous integration and deployment:
 
 ```
 ├── public/           # Frontend files
-│   ├── index.html    # Main page
-│   ├── style.css     # Styles
-│   ├── app.js        # Client logic
+│   ├── index.html    # Main page with provider grouping UI
+│   ├── style.css     # Styles with provider group styling
+│   ├── app.js        # Client logic with collapse/expand functionality
 │   └── favicon.png   # Icon
 ├── routes/           # API routes
-│   ├── models.js     # Models endpoint
-│   └── chat.js       # Chat endpoint
+│   ├── models.js     # Models endpoint with smart filtering
+│   └── chat.js       # Chat endpoint with streaming support
 ├── server.js         # Main server file
 ├── test.js           # Tests
+├── SECURITY.md       # Security policy
 ├── package.json      # Dependencies
 └── .gitignore        # Ignored files
 ```
@@ -105,10 +118,28 @@ This project uses GitHub Actions for continuous integration and deployment:
 ## 🎯 Usage
 
 1. Open the application in the browser
-2. Select models from the sidebar
+2. Select models from the sidebar (organized by provider)
 3. Enter a question in the top field
 4. Click "Compare all models"
 5. View the results in the table below
+
+### Provider Management
+
+- **Active Providers**: Show green checkmarks and list available models
+- **Inactive Providers**: Show red indicators with setup instructions for missing API keys
+- **Model Filtering**: Only chat-capable models are displayed (embeddings, audio, vision-only models are automatically filtered out)
+- **Provider Groups**: Collapse/expand provider sections to organize the interface
+
+### Supported Models
+
+The application automatically filters and displays only chat-capable models from all configured providers:
+
+- **Groq**: 13 models (Llama, Qwen, Mixtral variants)
+- **OpenAI**: 36 models (GPT-4, GPT-4o, GPT-4o-mini variants)
+- **Anthropic**: 7 models (Claude-3 variants)
+- **Google AI**: 8 models (Gemini variants)
+- **Mistral**: 0 models (inactive - requires API key)
+- **Cohere**: 0 models (inactive - requires API key)
 
 ## 🤝 Contributing
 

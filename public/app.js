@@ -7,6 +7,8 @@ let lastQuestion = "";
 let selectedModel = null;
 let history = JSON.parse(localStorage.getItem('chatHistory')) || [];             // [{ question, answersSnapshot }]
 let currentLanguage = localStorage.getItem('language') || 'bg'; // 'bg' or 'en'
+let collapsedProviders = JSON.parse(localStorage.getItem('collapsedProviders')) || {}; // provider -> boolean
+let providerStatus = {}; // provider status from backend
 
 // ===============================
 // TRANSLATIONS
@@ -16,6 +18,7 @@ const translations = {
     title: 'AI Multi-Model Tool',
     models: 'Модели',
     refreshModels: '⟳',
+    expandCollapse: 'Разгъни/Сгъни всички',
     history: 'История',
     clearHistory: '🗑️',
     messagePlaceholder: 'Напиши въпрос, който всички модели да отговорят...',
@@ -37,6 +40,7 @@ const translations = {
     title: 'AI Multi-Model Tool',
     models: 'Models',
     refreshModels: '⟳',
+    expandCollapse: 'Expand/Collapse All',
     history: 'History',
     clearHistory: '🗑️',
     messagePlaceholder: 'Type a question for all models to answer...',
@@ -79,8 +83,8 @@ function applyTranslations() {
   document.querySelector('#sendBtn').textContent = t('sendButton');
 
   // Update section headers
-  document.querySelectorAll('.sectionHeader h3')[0].textContent = t('models');
-  document.querySelectorAll('.sectionHeader h3')[1].textContent = t('history');
+  document.querySelectorAll('.sectionHeader h2')[0].textContent = t('models');
+  document.querySelectorAll('.sectionHeader h2')[1].textContent = t('history');
 
   // Update typing indicator
   document.querySelector('#typingIndicator').textContent = t('typing');
@@ -266,24 +270,90 @@ async function loadModels() {
     models = data.models.filter(m => m && m.id);
   }
 
+  // Store provider status
+  providerStatus = data.providers || {};
+
+  // Initialize collapsed state for all providers (active and inactive)
+  const allProviders = Object.keys(providerStatus);
+  allProviders.forEach(provider => {
+    if (!(provider in collapsedProviders)) {
+      collapsedProviders[provider] = false;
+    }
+  });
+  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
+
   renderModelList();
 }
 
 function renderModelList() {
   modelListEl.innerHTML = "";
 
-  const grouped = groupModels(models);
+  // Group models by provider
+  const grouped = {};
+  models.forEach(m => {
+    const provider = m.provider || "Unknown";
+    if (!grouped[provider]) {
+      grouped[provider] = [];
+    }
+    grouped[provider].push(m);
+  });
 
-  Object.keys(grouped).forEach(groupName => {
-    const list = grouped[groupName];
-    if (!list.length) return;
+  // Show all providers (both active and inactive)
+  Object.keys(providerStatus).sort().forEach(providerName => {
+    const list = grouped[providerName] || [];
+    const status = providerStatus[providerName];
+    const isActive = status && status.enabled && status.hasApiKey;
+
+    // Create collapsible provider group
+    const providerGroup = document.createElement("div");
+    providerGroup.className = isActive ? "providerGroup" : "providerGroup inactive";
+    providerGroup.dataset.provider = providerName;
 
     const header = document.createElement("div");
-    header.className = "modelGroupHeader";
-    header.textContent = groupName;
-    modelListEl.appendChild(header);
+    header.className = isActive ? "modelGroupHeader" : "modelGroupHeader inactive";
+    header.setAttribute("role", "button");
+    header.setAttribute("aria-expanded", !collapsedProviders[providerName]);
+    header.setAttribute("tabindex", "0");
+    
+    const headerContent = document.createElement("div");
+    headerContent.className = "headerContent";
+    
+    const arrow = document.createElement("span");
+    arrow.className = "expandArrow";
+    arrow.innerHTML = collapsedProviders[providerName] ? "▶" : "▼";
+    
+    const providerTitle = document.createElement("span");
+    const statusBadge = isActive ? `` : ` <span class="inactiveBadge">⚠ No API Key</span>`;
+    providerTitle.innerHTML = `${providerName} (${list.length})${statusBadge}`;
+    
+    headerContent.appendChild(arrow);
+    headerContent.appendChild(providerTitle);
+    header.appendChild(headerContent);
+    
+    // Toggle collapse on click
+    header.addEventListener("click", () => toggleProvider(providerName));
+    header.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleProvider(providerName);
+      }
+    });
 
-    list.forEach(m => {
+    const modelsContainer = document.createElement("div");
+    modelsContainer.className = "providerModels";
+    if (collapsedProviders[providerName]) {
+      modelsContainer.style.display = "none";
+    }
+
+    if (!isActive || list.length === 0) {
+      // Show inactive message
+      const inactiveMsg = document.createElement("div");
+      inactiveMsg.className = "inactiveMessage";
+      inactiveMsg.innerHTML = `<span class="inactiveIcon">🔒</span> Add <code>${providerName.toUpperCase()}_API_KEY</code> to .env file to enable this provider`;
+      modelsContainer.appendChild(inactiveMsg);
+    } else {
+      // Show active models
+      list.forEach(m => {
       const id = m.id;
       const provider = m.provider || "Unknown";
 
@@ -319,12 +389,53 @@ function renderModelList() {
 
       li.onclick = () => selectModel(id);
 
-      modelListEl.appendChild(li);
-    });
+      modelsContainer.appendChild(li);
+      });
+    }
+    
+    providerGroup.appendChild(header);
+    providerGroup.appendChild(modelsContainer);
+    modelListEl.appendChild(providerGroup);
   });
 }
 
+// Toggle provider collapse/expand
+function toggleProvider(providerName) {
+  collapsedProviders[providerName] = !collapsedProviders[providerName];
+  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
+  
+  const providerGroup = document.querySelector(`.providerGroup[data-provider="${providerName}"]`);
+  if (providerGroup) {
+    const header = providerGroup.querySelector('.modelGroupHeader');
+    const arrow = header.querySelector('.expandArrow');
+    const modelsContainer = providerGroup.querySelector('.providerModels');
+    
+    if (collapsedProviders[providerName]) {
+      arrow.innerHTML = "▶";
+      modelsContainer.style.display = "none";
+      header.setAttribute("aria-expanded", "false");
+    } else {
+      arrow.innerHTML = "▼";
+      modelsContainer.style.display = "block";
+      header.setAttribute("aria-expanded", "true");
+    }
+  }
+}
+
+// Expand/collapse all providers
+function toggleAllProviders() {
+  const allCollapsed = Object.values(collapsedProviders).every(v => v === true);
+  
+  Object.keys(collapsedProviders).forEach(provider => {
+    collapsedProviders[provider] = !allCollapsed;
+  });
+  
+  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
+  renderModels();
+}
+
 document.getElementById("refreshModels").onclick = loadModels;
+document.getElementById("expandCollapseBtn").onclick = toggleAllProviders;
 document.getElementById("clearHistory").onclick = () => {
   history = [];
   localStorage.removeItem('chatHistory');
