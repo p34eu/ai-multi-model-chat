@@ -11,6 +11,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Model Caching**: 10-minute cache for model data to improve performance
 - **Rate Limiting**: Security protection against excessive requests
 - **Markdown Support**: Automatic recognition and rendering of tables
+- **Internationalization**:  Bulgarian and English language support for UI
 - **Responsive Design**: Works on different devices
 - **Consistent Icons**: SVG icons for all elements
 

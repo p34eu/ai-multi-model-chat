@@ -10,7 +10,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
-
+.htaccess
 # Logs
 logs
 *.log
@@ -69,7 +69,7 @@ dist
 
 # Gatsby files
 .cache/
-public
+
 
 # Storybook build outputs
 .out

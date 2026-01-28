@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="bg">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AI Multi-Model</title>
+    <link rel="icon" href="favicon.png" type="image/png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header id="topBar">
+        <div id="title">AI Multi-Model</div>        <div id="languageSwitcher">
+          <button id="langBg" class="lang-btn">BG</button>
+          <button id="langEn" class="lang-btn">EN</button>
+        </div>             <div id="questionArea">
+            <input
+              id="message"
+              type="text"
+              placeholder="Напиши въпрос, който всички модели да отговорят..."
+            />
+            <button id="sendBtn">Сравни всички модели</button>
+          </div>
+      </header>
+
+      <main id="mainArea">
+        <aside id="sidePanel">
+          <div class="sectionHeader">
+            <h3>Модели</h3>
+            <button id="refreshModels" class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3a5 5 0 1 0 4.546 2.914"/><path d="M8 1v3l3 2"/></svg></button>
+          </div>
+          <ul id="modelList"></ul>
+          <div class="divider"></div>
+          <div class="sectionHeader">
+            <h3>История</h3>
+            <button id="clearHistory" class="btn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h10"/><path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><path d="M4 3h8l-1-2H5L4 3z"/></svg></button>
+          </div>
+          <ul id="historyList"></ul>
+        </aside>
+
+        <section id="chatSection">
+     
+
+          <div id="typingIndicator" class="hidden">Моделите отговарят…</div>
+
+          <div id="selectedModelInfo" class="hidden"></div>
+          <div id="selectedModelAnswer" class="hidden"></div>
+
+          <div id="comparisonTable"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
