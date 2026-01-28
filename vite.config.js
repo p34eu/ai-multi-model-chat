@@ -1,24 +1,13 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-
+import { defineConfig } from "vite";
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 export default defineConfig({
-  root: 'src',
-  publicDir: false,
+  root: ".", // default, but explicit is fine
+  publicDir: "public", // static assets
   build: {
-    outDir: '../public/assets',
-    emptyOutDir: true,
-    assetsDir: '',
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'src/index.html')
-      }
-    }
+    outDir: "public", // output into your webroot
+    emptyOutDir: false, // prevent deleting your webroot
   },
-  server: {
-    port: 3000,
-    proxy: {
-      '/models': 'http://localhost:3003',
-      '/chat': 'http://localhost:3003'
-    }
-  }
-})
+  plugins: [
+    viteStaticCopy({ targets: [{ src: "src/images/*.png", dest: "assets" }] }),
+  ],
+});

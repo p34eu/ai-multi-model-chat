@@ -132,6 +132,9 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 
 # Cohere - Optional
 COHERE_API_KEY=your_cohere_api_key_here
+
+# Application URL (for social sharing meta tags)
+VITE_APP_URL=https://your-domain.com
 ```
 
 
