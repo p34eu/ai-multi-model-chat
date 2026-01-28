@@ -3,9 +3,11 @@ import { resolve } from 'path'
 
 export default defineConfig({
   root: 'src',
+  publicDir: false,
   build: {
-    outDir: '../public',
+    outDir: '../public/assets',
     emptyOutDir: true,
+    assetsDir: '',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'src/index.html')
