@@ -23,7 +23,8 @@ jobs:
 
       - name: Start server
         run: |
-          GROQ_API_KEY=fake_key_for_testing npm start &
+          # start the server on the same port used by Lighthouse config (3003)
+          PORT=3003 GROQ_API_KEY=fake_key_for_testing npm start &
         env:
           GROQ_API_KEY: fake_key_for_testing
 

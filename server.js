@@ -25,7 +25,9 @@ app.use((req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-const PORT = process.env.NODE_PORT || 3003;
+// Prefer the standard PORT environment variable (from .env) but fall back to NODE_PORT
+// and a hardcoded default to remain compatible with different deployment setups.
+const PORT = process.env.PORT || process.env.NODE_PORT || 3003;
 app.listen(PORT, () => {
   console.log(`AI server running on port ${PORT}`);
 });
