@@ -63,9 +63,12 @@ jspm_packages/
 # Next.js build output
 .next
 
-# Nuxt.js build / generate output
+#  build / generate output
 .nuxt
 dist
+public/index.html
+
+public/build
 
 # Gatsby files
 .cache/
