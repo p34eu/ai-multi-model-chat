@@ -7,9 +7,10 @@
     "test": "node --test",
     "start": "node server.js",
     "dev": "vite",
-    "build": "dotenv -e .env -- vite build && mv public/assets/index.html public/index.html",
+    "build": "dotenv -e .env -- vite build ",
     "preview": "vite preview",
-    "build:start": "npm run build && npm start"
+    "build:start": "npm run build && npm start",
+    "postbuild": "rm -rf public/build && mv dist/* public/"
   },
   "keywords": [],
   "author": "",
@@ -25,7 +26,6 @@
   },
   "devDependencies": {
     "dotenv-cli": "^11.0.0",
-    "vite": "^7.3.1",
-    "vite-plugin-static-copy": "^3.2.0"
+    "vite": "^7.3.1"
   }
 }

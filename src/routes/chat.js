@@ -303,6 +303,8 @@ router.post("/", async (req, res) => {
     // Set authorization based on provider
     if (provider.name === "Google AI") {
       url += `?key=${provider.apiKey}`;
+    } else if (provider.name === "Anthropic") {
+      headers["x-api-key"] = provider.apiKey;
     } else {
       headers["Authorization"] = `Bearer ${provider.apiKey}`;
     }

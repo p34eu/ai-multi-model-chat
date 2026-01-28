@@ -1,13 +1,20 @@
-import { defineConfig } from "vite";
-import { viteStaticCopy } from 'vite-plugin-static-copy'
-export default defineConfig({
-  root: ".", // default, but explicit is fine
-  publicDir: "public", // static assets
-  build: {
-    outDir: "public", // output into your webroot
-    emptyOutDir: false, // prevent deleting your webroot
-  },
-  plugins: [
-    viteStaticCopy({ targets: [{ src: "src/images/*.png", dest: "assets" }] }),
-  ],
+import { defineConfig, loadEnv } from "vite";
+
+export default defineConfig(({ mode }) => {
+  
+  const env = loadEnv(mode, process.cwd(), "");
+
+  return {
+    build: {
+      assetsDir: "build", // put JS/CSS directly in dist/
+    },
+    server: {
+      proxy: {
+        "/api": {
+          target: env.APP_URL,
+          changeOrigin: true,
+        },
+      },
+    },
+  };
 });

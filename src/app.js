@@ -9,6 +9,9 @@ let history = JSON.parse(localStorage.getItem('chatHistory')) || [];            
 let currentLanguage = localStorage.getItem('language') || 'bg'; // 'bg' or 'en'
 let collapsedProviders = JSON.parse(localStorage.getItem('collapsedProviders')) || {}; // provider -> boolean
 let providerStatus = {}; // provider status from backend
+let isResultsView = false; // Track if we're showing results
+let isSidebarCollapsed = false;
+let hasMobileInit = false;
 
 // Check if on mobile device
 function isMobile() {
@@ -89,6 +92,15 @@ function updateLanguage(lang) {
   applyTranslations();
 }
 
+/**
+ * Applies translations to all text content and placeholders in the DOM.
+ * Updates title, labels, buttons, table headers, and section headers with translated strings.
+ * Handles optional elements gracefully with null checks before updating.
+ * Replaces hardcoded text in model details and response messages with translated equivalents.
+ * 
+ * @function applyTranslations
+ * @returns {void}
+ */
 function applyTranslations() {
   // Update title
   document.title = t('title');
@@ -99,11 +111,18 @@ function applyTranslations() {
   document.querySelector('#sendBtn').textContent = t('sendButton');
 
   // Update section headers
-  document.querySelectorAll('.sectionHeader h2')[0].textContent = t('models');
-  document.querySelectorAll('.sectionHeader h2')[1].textContent = t('history');
-
+ 
+  document.querySelectorAll('span[data-i18n="models"]').forEach(el => {
+  el.textContent =t('models');
+});
+  document.querySelectorAll('span[data-i18n="history"]').forEach(el => {
+  el.textContent =t('history');
+});
   // Update typing indicator
-  document.querySelector('#typingIndicator').textContent = t('typing');
+  const typingText = document.querySelector('#typingText');
+  if (typingText) {
+    typingText.textContent = t('typing');
+  }
 
   // Update comparison table if exists
   const comparisonTitle = document.querySelector('#comparisonTable h3');
@@ -331,7 +350,7 @@ function parseMarkdownTable(text) {
 // LOAD MODELS
 // ===============================
 async function loadModels() {
-  const res = await fetch("/models");
+  const res = await fetch("/api/models");
   const data = await res.json();
 
   if (!data.models || !Array.isArray(data.models)) {
@@ -580,7 +599,9 @@ async function askAllModels(question) {
     el.className = "modelStatus";
   });
 
+  // Show spinner and collapse UI on mobile
   typingIndicator.classList.remove("hidden");
+  
   comparisonTableEl.innerHTML = "";
   selectedModelInfoEl.classList.add("hidden");
   selectedModelAnswerEl.classList.add("hidden");
@@ -610,7 +631,7 @@ async function askSingleModel(question, modelId) {
   const start = performance.now();
 
   try {
-    const response = await fetch("/chat", {
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: question, model: modelId })
@@ -686,6 +707,8 @@ async function askSingleModel(question, modelId) {
             let icon = "❌";
             if (json.error.includes("429") || json.error.toLowerCase().includes("quota")) {
               icon = "💰";
+            } else if (json.error.includes("Your credit balance is too low")) {
+              icon = "💰";
             }
 
             answers[modelId] = { text: `${icon} Error: ${json.error}`, time, error: true };
@@ -740,6 +763,9 @@ async function askSingleModel(question, modelId) {
 function renderComparisonTable() {
   if (!lastQuestion || !Object.keys(answers).length) {
     comparisonTableEl.innerHTML = "";
+    if (isMobile()) {
+      setMobileControlsVisible(false);
+    }
     return;
   }
 
@@ -800,6 +826,10 @@ function renderComparisonTable() {
 
   // Add event listener to clear button
   document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+
+  if (isMobile()) {
+    setMobileControlsVisible(true);
+  }
 }
 
 function createComparisonTable(answerSet) {
@@ -847,6 +877,55 @@ function createComparisonTable(answerSet) {
 }
 
 // ===============================
+// UI COLLAPSE/EXPAND
+// ===============================
+function setMobileControlsVisible(visible) {
+  const newQueryBtn = document.getElementById('newQueryBtn');
+  if (!newQueryBtn) return;
+
+  if (!isMobile()) {
+    newQueryBtn.classList.add('hidden');
+    return;
+  }
+
+  newQueryBtn.classList.toggle('hidden', !visible);
+}
+
+function applyCollapseState() {
+  document.getElementById('sidePanel').classList.toggle('collapsed', isSidebarCollapsed);
+
+  const sidebarBtn = document.getElementById('toggleSidebarBtn');
+
+  if (sidebarBtn) sidebarBtn.classList.toggle('active', !isSidebarCollapsed);
+
+  // Show/hide backdrop on mobile when sidebar is open
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (backdrop && isMobile()) {
+    backdrop.classList.toggle('visible', !isSidebarCollapsed);
+  }
+}
+
+function initMobileLayout() {
+  if (!isMobile()) {
+    if (!hasMobileInit) {
+      isSidebarCollapsed = false;
+    }
+  } else {
+    if (!hasMobileInit) {
+      isSidebarCollapsed = true;
+      hasMobileInit = true;
+    }
+  }
+
+  applyCollapseState();
+}
+
+function toggleSidebar() {
+  isSidebarCollapsed = !isSidebarCollapsed;
+  applyCollapseState();
+}
+
+// ===============================
 // CLEAR RESULTS
 // ===============================
 function clearResults() {
@@ -856,6 +935,9 @@ function clearResults() {
   selectedModelInfoEl.classList.add("hidden");
   selectedModelAnswerEl.classList.add("hidden");
   typingIndicator.classList.add("hidden");
+  if (isMobile()) {
+    setMobileControlsVisible(true);
+  }
 }
 
 // ===============================
@@ -874,6 +956,52 @@ messageInput.addEventListener("keydown", e => {
   if (e.key === "Enter") sendMessage();
 });
 
+// New query button handler
+document.getElementById('newQueryBtn').addEventListener('click', () => {
+  clearResults();
+  messageInput.focus();
+});
+
+// Toggle buttons for mobile
+document.getElementById('toggleSidebarBtn')?.addEventListener('click', toggleSidebar);
+document.getElementById('closeSidebarBtn')?.addEventListener('click', () => {
+  if (!isSidebarCollapsed) {
+    toggleSidebar();
+  }
+});
+document.getElementById('sidebarBackdrop')?.addEventListener('click', () => {
+  if (isMobile() && !isSidebarCollapsed) {
+    toggleSidebar();
+  }
+});
+
+// Tab switching
+document.getElementById('modelsTab')?.addEventListener('click', () => switchTab('models'));
+document.getElementById('historyTab')?.addEventListener('click', () => switchTab('history'));
+
+function switchTab(tab) {
+  const modelsTab = document.getElementById('modelsTab');
+  const historyTab = document.getElementById('historyTab');
+  const modelsPanel = document.getElementById('modelsPanel');
+  const historyPanel = document.getElementById('historyPanel');
+
+  if (tab === 'models') {
+    modelsTab?.classList.add('active');
+    historyTab?.classList.remove('active');
+    modelsPanel?.classList.add('active');
+    historyPanel?.classList.remove('active');
+    modelsTab?.setAttribute('aria-selected', 'true');
+    historyTab?.setAttribute('aria-selected', 'false');
+  } else {
+    historyTab?.classList.add('active');
+    modelsTab?.classList.remove('active');
+    historyPanel?.classList.add('active');
+    modelsPanel?.classList.remove('active');
+    historyTab?.setAttribute('aria-selected', 'true');
+    modelsTab?.setAttribute('aria-selected', 'false');
+  }
+}
+
 // Prevent form submission
 document.getElementById('questionArea').addEventListener('submit', e => {
   e.preventDefault();
@@ -887,6 +1015,11 @@ loadModels();
 renderHistory();
 applyTranslations();
 typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
+initMobileLayout();
+
+window.addEventListener('resize', () => {
+  initMobileLayout();
+});
 
 // Language switcher
 document.getElementById('langBg').addEventListener('click', () => {

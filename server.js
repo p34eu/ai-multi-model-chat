@@ -8,18 +8,22 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import modelsRoute from "./src/routes/models.js";
+import chatRoute from "./src/routes/chat.js";
+
 const app = express();
 
 app.use(express.json());
 
-app.use(express.json());
+app.use("/api/models", modelsRoute);
+app.use("/api/chat", chatRoute);
+
 app.use(express.static(path.join(__dirname, "public")));
 
-import modelsRoute from "./src/routes/models.js";
-import chatRoute from "./src/routes/chat.js";
-
-app.use("/models", modelsRoute);
-app.use("/chat", chatRoute);
+// SPA fallback - serve index.html for all non-API routes
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 const PORT = process.env.NODE_PORT || 3003;
 app.listen(PORT, () => {
