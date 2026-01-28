@@ -1,0 +1,17 @@
+# This file defines the code owners for this repository
+# When a pull request is opened, the users listed here will be automatically
+# requested for review
+
+# Global owners - all files
+* @p34eu
+
+# Backend files
+server.js @p34eu
+routes/ @p34eu
+
+# Frontend files
+public/ @p34eu
+
+# Configuration files
+.github/ @p34eu
+package.json @p34eu

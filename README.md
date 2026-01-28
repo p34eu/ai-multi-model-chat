@@ -55,7 +55,17 @@ To run the tests:
 npm test
 ```
 
-## 📁 Project Structure
+## � CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **CI Pipeline**: Automated testing on multiple Node.js versions
+- **CodeQL**: Security vulnerability scanning
+- **Dependency Review**: Automated dependency security checks- **Performance Monitoring**: Lighthouse performance, accessibility, and SEO checks- **Release Automation**: Automated releases on version tags
+- **Stale Management**: Automatic cleanup of inactive issues/PRs
+- **Dependabot**: Automated dependency updates
+
+## �📁 Project Structure
 
 ```
 ├── public/           # Frontend files
@@ -87,6 +97,15 @@ npm test
 3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+Please use the provided issue and PR templates when contributing.
+
+## 📋 Community Guidelines
+
+- **Code of Conduct**: See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Contributing Guide**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Security Policy**: See [SECURITY.md](SECURITY.md)
+- **Issue and PR Templates**: Standardized formats for contributions
 
 ## 📄 License
 

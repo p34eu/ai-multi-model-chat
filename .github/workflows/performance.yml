@@ -1,0 +1,38 @@
+name: Performance
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start server
+        run: npm start &
+        env:
+          GROQ_API_KEY: fake_key_for_testing
+
+      - name: Wait for server
+        run: sleep 5
+
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          urls: http://localhost:3003
+          configPath: .lighthouserc.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true
