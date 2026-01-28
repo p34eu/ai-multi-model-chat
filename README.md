@@ -51,6 +51,9 @@ npm install
 ```
 
 3. Create a `.env` file with your API keys (at least one provider required):
+**Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
+OpenAI and Google almost immediately hit the quota.
+   
 ```env
 # Groq (Fast inference, Llama/Gemma models)
 GROQ_API_KEY=your_groq_api_key_here
@@ -71,7 +74,6 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 COHERE_API_KEY=your_cohere_api_key_here
 ```
 
-**Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
 
 4. Start the application:
 ```bash
@@ -138,8 +140,8 @@ The application automatically filters and displays only chat-capable models from
 - **OpenAI**: 36 models (GPT-4, GPT-4o, GPT-4o-mini variants)
 - **Anthropic**: 7 models (Claude-3 variants)
 - **Google AI**: 8 models (Gemini variants)
-- **Mistral**: 0 models (inactive - requires API key)
-- **Cohere**: 0 models (inactive - requires API key)
+- **Mistral**: 9 models (inactive - requires API key)
+- **Cohere**: 9 models 
 
 ## 🤝 Contributing
 
