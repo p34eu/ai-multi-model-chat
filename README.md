@@ -1,6 +1,13 @@
-# AI Multi-Model Chat 
+# AI Multi-Model Chat
 
 An intelligent tool for comparing responses from multiple AI models in real-time. Allows simultaneous querying of multiple models and visual comparison of results.
+
+[![CI](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/p34eu/ai-multi-model-chat/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
+[![Performance](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml)
 
 ## 🚀 Features
 
