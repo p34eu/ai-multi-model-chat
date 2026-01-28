@@ -4,7 +4,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 [![CI](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/p34eu/ai-multi-model-chat/releases)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/p34eu/ai-multi-model-chat/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
 [![Performance](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml)
@@ -23,10 +23,50 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Rate Limiting**: Security protection against excessive requests
 - **Markdown Support**: Automatic recognition and rendering of tables
 - **Internationalization**: Bulgarian and English language support for UI
-- **Responsive Design**: Works on different devices
+- **Responsive Design**: Works on different devices with mobile-optimized layout
+- **Mobile Optimizations**: Collapsed model groups on mobile, touch-friendly interface
+- **Error Handling**: Failed responses filtered out and displayed separately
+- **Cache Busting**: Vite-powered build system with hashed assets for optimal caching
 - **Consistent Icons**: SVG icons for all elements
+## 🎨 UI/UX Features
 
-## 🛠️ Technologies
+### Mobile Experience
+- **Responsive Layout**: Optimized for phones, tablets, and desktops
+- **Touch-Friendly**: 44px minimum touch targets for mobile devices
+- **Collapsed Navigation**: Model groups collapsed by default on mobile
+- **Horizontal Scrolling**: Tables scroll horizontally on small screens
+
+### Error Management
+- **Smart Filtering**: Failed API responses automatically filtered from main results
+- **Separate Display**: Error responses shown in collapsible section
+- **Visual Indicators**: Clear distinction between successful and failed responses
+- **Graceful Degradation**: App continues working even with partial failures
+
+### Performance & Caching
+- **Asset Optimization**: Vite builds with hashed filenames for cache busting
+- **Model Data Caching**: 10-minute cache for API model lists
+- **Compression**: LiteSpeed server compression for faster loading
+- **Lazy Loading**: Efficient resource loading and management
+## � Project Structure
+
+```
+├── src/                    # Source files
+│   ├── index.html         # Main HTML template
+│   ├── app.js            # Main application logic
+│   ├── style.css         # Application styles
+│   ├── routes/           # Express.js API routes
+│   │   ├── models.js     # AI models API
+│   │   └── chat.js       # Chat API
+├── public/                # Built files (served by server)
+│   ├── index.html        # Built HTML with hashed assets
+│   ├── assets/           # Hashed CSS and JS files
+│   └── ...               # Static assets (images, etc.)
+├── server.js              # Express server
+├── vite.config.js         # Vite build configuration
+└── package.json           # Dependencies and scripts
+```
+
+## �🛠️ Technologies
 
 - **Backend**: Node.js v20+, Express.js
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
@@ -37,7 +77,27 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Tests**: Node.js built-in test runner
 - **Process Management**: PM2 for production deployment
 
-## 📦 Installation
+## � Build System
+
+This project uses **Vite** for modern frontend tooling with cache busting:
+
+### Development
+```bash
+npm run dev          # Start development server with hot reload
+```
+
+### Production Build
+```bash
+npm run build        # Build optimized assets with hashed filenames
+npm run build:start  # Build and start production server
+```
+
+### Cache Busting
+- Automatic filename hashing for CSS/JS assets
+- Optimal browser caching strategy
+- LiteSpeed server compression enabled
+
+## �📦 Installation
 
 1. Clone the repository:
 ```bash
@@ -82,9 +142,27 @@ npm start
 
 The application will be available at `http://localhost:3003`
 
-## 🧪 Tests
+## 🛠️ Development
 
-To run the tests:
+### Development Server
+For development with hot reload and API proxying:
+```bash
+npm run dev
+```
+
+### Production Build
+To build the application with cache busting:
+```bash
+npm run build
+```
+
+### Build and Start
+To build and start the production server:
+```bash
+npm run build:start
+```
+
+### Testing
 ```bash
 npm test
 ```
@@ -116,6 +194,31 @@ This project uses GitHub Actions for continuous integration and deployment:
 ├── package.json      # Dependencies
 └── .gitignore        # Ignored files
 ```
+
+## 🚀 Deployment
+
+### LiteSpeed Server
+This application is configured for LiteSpeed web server with reverse proxy:
+
+- **Reverse Proxy**: Forwards requests to Node.js backend
+- **WebSocket Support**: Handles real-time streaming connections
+- **Compression**: Automatic compression for faster loading
+- **Static Files**: Direct serving of built assets
+
+### PM2 Process Management
+```bash
+# Start production servers
+pm2 start app.yml
+
+# Check status
+pm2 list
+
+# Restart services
+pm2 restart all
+```
+
+### Environment Variables
+Configure API keys for different AI providers in `.env` file.
 
 ## 🎯 Usage
 

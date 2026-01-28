@@ -156,6 +156,18 @@ body {
   color: white;
 }
 
+/* Bottom bar */
+#bottomBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+  background: linear-gradient(to right, #020617, #0f172a);
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
 /* Layout */
 
 #mainArea {
@@ -195,7 +207,7 @@ body {
   gap: 4px;
 }
 
-#refreshModels, #expandCollapseBtn, .btn {
+#refreshModels, #expandCollapseBtn, .btn, .clear-btn {
   background: var(--panel);
   color: var(--text-muted);
   padding: 4px 8px;
@@ -205,7 +217,7 @@ body {
   border: none;
 }
 
-#refreshModels:hover, #expandCollapseBtn:hover, .btn:hover {
+#refreshModels:hover, #expandCollapseBtn:hover, .btn:hover, .clear-btn:hover {
   background: var(--accent-soft);
   color: var(--text);
 }
@@ -584,6 +596,60 @@ table.compare tr:nth-child(even) td {
   background: rgba(15, 23, 42, 0.7);
 }
 
+/* Failed responses section */
+.failed-responses {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+}
+
+.failed-responses.collapsed .failed-content {
+  display: none;
+}
+
+.toggle-failed-btn {
+  width: 100%;
+  background: var(--panel);
+  border: none;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-failed-btn:hover {
+  background: var(--accent-soft);
+}
+
+.toggle-icon {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.failed-responses:not(.collapsed) .toggle-icon {
+  transform: rotate(90deg);
+}
+
+.failed-content {
+  padding: 16px;
+}
+
+.failed-table {
+  border: 1px solid #dc3545;
+}
+
+.failed-table th {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
 table.markdown-table {
   width: 100%;
   border-collapse: collapse;
@@ -679,5 +745,231 @@ table.markdown-table th {
 
   #chatSection {
     flex: 1;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+  #topBar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    align-items: stretch;
+  }
+
+  #title {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .github-badge {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  #languageSwitcher {
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  #questionArea {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #message {
+    width: 100%;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+
+  #sendBtn {
+    width: 100%;
+    padding: 12px;
+  }
+
+  #sidePanel {
+    height: 250px;
+    padding: 8px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .header-buttons {
+    justify-content: center;
+  }
+
+  .models-section h2,
+  .history-section h2 {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  /* Make comparison table scrollable horizontally */
+  #comparisonTable {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .compare {
+    min-width: 600px;
+    font-size: 14px;
+  }
+
+  .answer-cell {
+    max-width: 200px;
+    word-wrap: break-word;
+  }
+
+  /* Adjust model list for mobile */
+  #modelList li {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  #modelList .model-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* History list */
+  #historyList li {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  /* Loading spinner */
+  .loading-spinner {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Markdown table */
+  .markdown-table {
+    font-size: 12px;
+    min-width: 300px;
+  }
+
+  .markdown-table th,
+  .markdown-table td {
+    padding: 4px 6px;
+  }
+
+  #bottomBar {
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+  }
+
+  .toggle-failed-btn {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .failed-content {
+    padding: 12px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  #topBar {
+    padding: 8px;
+  }
+
+  #title {
+    font-size: 18px;
+  }
+
+  .github-badge {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .lang-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  #questionArea {
+    gap: 6px;
+  }
+
+  #message {
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  #sendBtn {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  #sidePanel {
+    height: 200px;
+    padding: 6px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 16px;
+  }
+
+  .compare {
+    min-width: 500px;
+    font-size: 12px;
+  }
+
+  .answer-cell {
+    max-width: 150px;
+  }
+
+  .markdown-table {
+    font-size: 11px;
+    min-width: 250px;
+  }
+
+  .markdown-table th,
+  .markdown-table td {
+    padding: 3px 4px;
+  }
+
+  #modelList li,
+  #historyList li {
+    padding: 6px;
+    font-size: 13px;
+  }
+
+  .model-status {
+    font-size: 12px;
+  }
+
+  .questionTitle {
+    font-size: 14px;
+  }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  #message {
+    min-height: 44px;
+  }
+
+  .model-item {
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  .history-item {
+    min-height: 44px;
+    padding: 12px;
   }
 }

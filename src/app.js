@@ -10,6 +10,18 @@ let currentLanguage = localStorage.getItem('language') || 'bg'; // 'bg' or 'en'
 let collapsedProviders = JSON.parse(localStorage.getItem('collapsedProviders')) || {}; // provider -> boolean
 let providerStatus = {}; // provider status from backend
 
+// Check if on mobile device
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+// Initialize collapsed providers for mobile
+if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
+  // Will be set after models are loaded
+}
+
+// ===============================
+// TRANSLATIONS
 // ===============================
 // TRANSLATIONS
 // ===============================
@@ -32,6 +44,8 @@ const translations = {
     model: 'Модел',
     time: 'Време',
     answer: 'Отговор',
+    clearResults: 'Изчисти резултатите',
+    failedResponses: 'Неуспешни отговори',
     language: 'Език',
     english: 'English',
     bulgarian: 'Български'
@@ -54,6 +68,8 @@ const translations = {
     model: 'Model',
     time: 'Time',
     answer: 'Answer',
+    clearResults: 'Clear Results',
+    failedResponses: 'Failed Responses',
     language: 'Language',
     english: 'English',
     bulgarian: 'Български'
@@ -245,15 +261,36 @@ function parseMarkdownTable(text) {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return null; // Return null if not a table
 
-  // Check if first line starts with | and has separators
-  if (!lines[0].startsWith('|') || !lines[1].includes('---')) return null;
+  // Find table start: line starting with | followed by separator line
+  let tableStart = -1;
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (lines[i].startsWith('|') && lines[i+1].includes('---') && lines[i+1].includes('|')) {
+      tableStart = i;
+      break;
+    }
+  }
+  if (tableStart === -1) return null;
 
-  const headers = lines[0].split('|').slice(1, -1).map(h => h.trim());
+  // Find table end: next non-table line or end
+  let tableEnd = tableStart + 2;
+  for (let i = tableStart + 2; i < lines.length; i++) {
+    if (!lines[i].startsWith('|')) {
+      tableEnd = i;
+      break;
+    } else {
+      tableEnd = i + 1;
+    }
+  }
+
+  const tableLines = lines.slice(tableStart, tableEnd);
+  if (tableLines.length < 2) return null;
+
+  const headers = tableLines[0].split('|').slice(1, -1).map(h => h.trim());
   const rows = [];
 
-  for (let i = 2; i < lines.length; i++) {
-    if (lines[i].trim() === '') continue;
-    const cells = lines[i].split('|').slice(1, -1).map(c => c.trim());
+  for (let i = 2; i < tableLines.length; i++) {
+    if (tableLines[i].trim() === '') continue;
+    const cells = tableLines[i].split('|').slice(1, -1).map(c => c.trim());
     if (cells.length === headers.length) {
       rows.push(cells);
     }
@@ -310,7 +347,7 @@ async function loadModels() {
   const allProviders = Object.keys(providerStatus);
   allProviders.forEach(provider => {
     if (!(provider in collapsedProviders)) {
-      collapsedProviders[provider] = false;
+      collapsedProviders[provider] = isMobile(); // Collapse on mobile by default
     }
   });
   localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
@@ -706,11 +743,66 @@ function renderComparisonTable() {
     return;
   }
 
+  // Separate successful and failed responses
+  const successfulAnswers = {};
+  const failedAnswers = {};
+
+  Object.keys(answers).forEach(id => {
+    const ans = answers[id];
+    if (ans.error || ans.text.includes("❌") || ans.text.includes("No response")) {
+      failedAnswers[id] = ans;
+    } else {
+      successfulAnswers[id] = ans;
+    }
+  });
+
   comparisonTableEl.innerHTML = `
     <h3>${t('comparisonTitle')}</h3>
+    <button id="clearResultsBtn" class="clear-btn">${t('clearResults')}</button>
     <div class="questionTitle"><strong>${t('question')}:</strong> ${lastQuestion}</div>
   `;
 
+  // Render successful answers table
+  if (Object.keys(successfulAnswers).length > 0) {
+    const table = createComparisonTable(successfulAnswers);
+    comparisonTableEl.appendChild(table);
+  }
+
+  // Render failed answers in collapsed section
+  if (Object.keys(failedAnswers).length > 0) {
+    const failedSection = document.createElement('div');
+    failedSection.className = 'failed-responses collapsed';
+    failedSection.innerHTML = `
+      <button class="toggle-failed-btn">
+        <span class="toggle-icon">▶</span>
+        ${t('failedResponses')} (${Object.keys(failedAnswers).length})
+      </button>
+      <div class="failed-content">
+    `;
+
+    const failedTable = createComparisonTable(failedAnswers);
+    failedTable.classList.add('failed-table');
+    failedSection.querySelector('.failed-content').appendChild(failedTable);
+    failedSection.innerHTML += '</div>';
+
+    comparisonTableEl.appendChild(failedSection);
+
+    // Add toggle functionality
+    const toggleBtn = failedSection.querySelector('.toggle-failed-btn');
+    const content = failedSection.querySelector('.failed-content');
+    const icon = failedSection.querySelector('.toggle-icon');
+
+    toggleBtn.addEventListener('click', () => {
+      failedSection.classList.toggle('collapsed');
+      icon.textContent = failedSection.classList.contains('collapsed') ? '▶' : '▼';
+    });
+  }
+
+  // Add event listener to clear button
+  document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+}
+
+function createComparisonTable(answerSet) {
   const table = document.createElement('table');
   table.className = 'compare';
 
@@ -722,8 +814,8 @@ function renderComparisonTable() {
   });
   table.appendChild(headerRow);
 
-  Object.keys(answers).forEach(id => {
-    const ans = answers[id];
+  Object.keys(answerSet).forEach(id => {
+    const ans = answerSet[id];
     const row = document.createElement('tr');
 
     // Model cell
@@ -751,7 +843,19 @@ function renderComparisonTable() {
     table.appendChild(row);
   });
 
-  comparisonTableEl.appendChild(table);
+  return table;
+}
+
+// ===============================
+// CLEAR RESULTS
+// ===============================
+function clearResults() {
+  answers = {};
+  lastQuestion = "";
+  comparisonTableEl.innerHTML = "";
+  selectedModelInfoEl.classList.add("hidden");
+  selectedModelAnswerEl.classList.add("hidden");
+  typingIndicator.classList.add("hidden");
 }
 
 // ===============================
@@ -782,6 +886,7 @@ document.getElementById('questionArea').addEventListener('submit', e => {
 loadModels();
 renderHistory();
 applyTranslations();
+typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
 
 // Language switcher
 document.getElementById('langBg').addEventListener('click', () => {
