@@ -1,68 +1,68 @@
 # Contributing Guidelines
 
-Благодарим ви, че искате да допринесете към AI Multi-Model Chat Tool! 🎉
+Thank you for wanting to contribute to the AI Multi-Model Chat Tool! 🎉
 
-## Как да допринесете
+## How to contribute
 
-### 1. Подготовка
+### 1. Preparation
 
-- Fork-нете репозитория
-- Клонирайте вашия fork: `git clone https://github.com/YOUR_USERNAME/ai-multi-model-tool.git`
-- Създайте feature branch: `git checkout -b feature/AmazingFeature`
+- Fork the repository
+- Clone your fork: `git clone https://github.com/YOUR_USERNAME/ai-multi-model-tool.git`
+- Create a feature branch: `git checkout -b feature/AmazingFeature`
 
-### 2. Разработка
+### 2. Development
 
-- Пишете чист и четим код
-- Добавяйте коментари за сложна логика
-- Следвайте съществуващия code style
-- Добавяйте тестове за нови функционалности
+- Write clean, readable code
+- Add comments for complex logic
+- Follow the existing code style
+- Add tests for new features
 
-### 3. Commit
+### 3. Commits
 
-- Използвайте ясни commit съобщения
-- Пример: `feat: add dark mode toggle`
-- Категории: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+- Use clear, descriptive commit messages
+- Example: `feat: add dark mode toggle`
+- Common commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ### 4. Pull Request
 
-- Опишете подробно какво сте променили
-- Посочете свързани issues
-- Уверете се, че всички тестове преминават
-- Pull request-ът ще бъде прегледан възможно най-скоро
+- Describe what you changed and why
+- Link any related issues
+- Ensure all tests pass
+- Your pull request will be reviewed as soon as possible
 
 ## Code Style
 
 ### JavaScript
 
-- Използвайте ES6+ синтаксис
-- Camel case за променливи и функции
-- Pascal case за класове
-- Максимална дължина на ред: 100 символа
+- Use ES6+ syntax
+- Use camelCase for variables and functions
+- Use PascalCase for classes
+- Max line length: 100 characters
 
 ### CSS
 
-- Използвайте CSS custom properties за цветове
-- BEM методология за класове
-- Mobile-first подход
+- Use CSS custom properties for colors
+- Prefer BEM naming for classes
+- Follow a mobile-first approach
 
 ### HTML
 
-- Семантични тагове
-- Достъпност (alt атрибути, ARIA labels)
+- Use semantic tags
+- Consider accessibility (alt attributes, ARIA labels)
 
-## Тестове
+## Tests
 
-- Всички нови функционалности трябва да имат тестове
-- Поддържайте високо code coverage
-- Тестовете трябва да бъдат бързи и надеждни
+- All new features should include tests
+- Aim for good code coverage
+- Tests should be fast and reliable
 
 ## Issues
 
-- Използвайте issue templates
-- Опишвайте проблемите подробно
-- Добавяйте screenshots за UI проблеми
-- Посочете стъпки за репродуциране
+- Use issue templates when available
+- Describe bugs or feature requests clearly
+- Include screenshots for UI issues
+- Provide reproduction steps
 
 ## License
 
-С допринасянето си приемате, че кодът ви ще бъде под MIT лиценз.
+By contributing, you agree that your code will be licensed under the MIT License.
