@@ -75,7 +75,9 @@
           </button>
         </div>
         <h1 id="title" data-i18n="appTitle">AI Model Comparison Tool</h1>
-        <div></div>
+        <div>
+          <button id="openQuestionBtn" class="toggle-btn" aria-label="Open question modal">✉️</button>
+        </div>
       </div>
       <form id="questionArea" role="search" aria-label="AI model comparison query">
         <label for="message" class="sr-only">Enter your question for AI models</label>
@@ -115,6 +117,9 @@
           </button>
           <button id="historyTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="historyPanel">
             <span data-i18n="history">История</span>
+          </button>
+          <button id="failedTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="failedPanel">
+            <span data-i18n="failedModels">Неуспешни</span>
           </button>
           <button id="closeSidebarBtn" class="close-sidebar-btn" aria-label="Close sidebar">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
@@ -159,6 +164,7 @@
                 <button id="selectSuccessfulBtn" class="btn" aria-label="Select all last successful models" title="Select Last Successful">
                   ✓✓
                 </button>
+
                 <span id="selectedCount" class="selectedCount">0/0</span>
               </div>
             </div>
@@ -180,18 +186,41 @@
             </div>
             <ul id="historyList" aria-label="Previous queries"></ul>
           </section>
+
+          <section id="failedPanel" class="tab-panel" role="tabpanel" aria-labelledby="failedTab">
+            <div class="sectionHeader">
+              <div class="header-buttons">
+                <button id="refreshFailedBtn" class="btn" aria-label="Refresh failed models" title="Refresh failed models">⟳</button>
+                <button id="restoreSelectedFailedBtn" class="btn" aria-label="Restore selected failed models" title="Restore selected failed models" disabled>
+                  📥 Възстанови
+                </button>
+                <button id="clearAllFailedBtn" class="btn" aria-label="Clear all failed models" title="Restore all failed models to active list">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M3 6h10" />
+                    <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6" />
+                    <path d="M4 3h8l-1-2H5L4 3z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div id="failedModelsList" role="list" aria-label="Failed models"></div>
+          </section>
         </div>
       </aside>
 
       <aside id="resultsPanel" class="hidden" aria-label="Results summary">
-        <div class="resultsPanelHeader">
+        <div class="resultsPanelLabel">
           <h3 id="resultsPanelTitle">Получени резултати</h3>
-          <div class="resultsPanelActions">
-            <button id="clearResultsBtn" class="clear-btn">Изчисти резултатите</button>
-            <button id="toggleResultsPanelBtn" class="btn" aria-label="Hide results panel" title="Hide results panel">
-              ✕
-            </button>
+          <div class="resultsSortControls sortControls">
+            <span class="sortLabel">${/* will be translated by JS */ ''}</span>
+            <button id="resultsSortNameBtn" class="sortBtn" data-sort="name">${/* replaced in JS */ ''}</button>
+            <button id="resultsSortTimeBtn" class="sortBtn active" data-sort="time">${/* replaced in JS */ ''}</button>
           </div>
+      
+            <button id="clearResultsBtn" class="clear-btn">Изчисти резултатите</button>
+           
+         
         </div>
         <div id="resultsPanelContent"></div>
       </aside>
@@ -209,6 +238,16 @@
         <div id="comparisonTable" role="region" aria-label="AI model comparison results"></div>
       </section>
     </main>
+
+    <!-- Question modal (inserted here so it is available to JS) -->
+    <div id="questionModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Ask a question">
+      <div id="questionModalOverlay" class="modalOverlay" tabindex="-1"></div>
+      <div id="questionModalContent" class="modalContent">
+        <button id="closeQuestionModal" class="close-modal-btn" aria-label="Close question modal">✕</button>
+        <!-- The #questionArea form will be moved here by JS on desktop, and appended on mobile when opening -->
+      </div>
+    </div>
+
   </div>
 </body>
 

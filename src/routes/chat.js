@@ -470,13 +470,18 @@ router.post("/", async (req, res) => {
       
       if (isQuotaError) {
         markModelQuotaExceeded(model);
-        // Also add to permanent failed models cache
-        addFailedModel(model);
+        // Also add to permanent failed models cache with typed reason
+        addFailedModel(model, "quota_exceeded");
         console.log(`Marked model ${model} as quota exceeded and added to failed cache`);
       } else {
-        // Add to permanent failed models cache for non-quota errors
-        addFailedModel(model);
-        console.log(`Added model ${model} to failed models cache`);
+        // Classify obvious timeout messages as timeout
+        let errType = "api_error";
+        if (errorText && errorText.toLowerCase().includes("timeout")) {
+          errType = "timeout";
+        }
+
+        addFailedModel(model, errType);
+        console.log(`Added model ${model} to failed models cache (${errType})`);
       }
       
       let errorDetails = `${provider.name} API request failed (Status: ${response.status})`;
@@ -503,6 +508,14 @@ router.post("/", async (req, res) => {
     handleStreamingResponse(provider, response, res);
   } catch (err) {
     console.error("Chat error:", err);
+    // Record as internal/network error for debugging -> add to failed cache
+    try {
+      if (typeof addFailedModel === "function") {
+        addFailedModel(model, "internal_error");
+        console.log(`Added model ${model} to failed cache due to internal error`);
+      }
+    } catch (e) {}
+
     res.write(
       `data: ${JSON.stringify({ error: "Internal server error" })}\n\n`
     );

@@ -499,7 +499,10 @@ router.get("/", async (req, res) => {
     {}
   );
 
-  if (cachedModels && now - cacheTime < CACHE_DURATION) {
+  // Allow clients to force-refresh the model list with ?force=1
+  const force = req.query && (req.query.force === '1' || req.query.force === 'true');
+
+  if (!force && cachedModels && now - cacheTime < CACHE_DURATION) {
     // Update model counts in provider status
     Object.keys(providerStatus).forEach((providerName) => {
       providerStatus[providerName].modelCount = cachedModels.filter(
@@ -616,23 +619,32 @@ router.get("/check/:modelId", (req, res) => {
 
 // GET /api/models/failed - Get all failed models
 router.get("/failed", (req, res) => {
-  const failedModels = getFailedModels();
+  const failedModelsRaw = getFailedModels();
+  // Normalize older string-only format to new object structure
+  const models = (failedModelsRaw || []).map((m) =>
+    typeof m === "string"
+      ? { id: m, errorType: "unknown", timestamp: null }
+      : m
+  );
   res.json({
-    count: failedModels.length,
-    models: failedModels,
+    count: models.length,
+    models,
   });
 });
 
 // POST /api/models/failed - Add a model to failed cache
 router.post("/failed", (req, res) => {
-  const { modelId } = req.body;
+  const { modelId, errorType } = req.body;
   
   if (!modelId) {
     return res.status(400).json({ error: "modelId is required" });
   }
   
-  addFailedModel(modelId);
-  res.json({ success: true, modelId, message: `Model ${modelId} added to failed cache` });
+  addFailedModel(modelId, errorType || "unknown");
+  // Invalidate server-side models cache so frontend sees updated list immediately
+  cachedModels = null;
+  cacheTime = 0;
+  res.json({ success: true, modelId, errorType: errorType || "unknown", message: `Model ${modelId} added to failed cache` });
 });
 
 // DELETE /api/models/failed/:modelId - Remove a model from failed cache
@@ -641,6 +653,9 @@ router.delete("/failed/:modelId", (req, res) => {
   
   const removed = removeFailedModel(modelId);
   if (removed) {
+    // Invalidate models cache so UI sees restored model immediately
+    cachedModels = null;
+    cacheTime = 0;
     res.json({ success: true, modelId, message: `Model ${modelId} removed from failed cache` });
   } else {
     res.status(404).json({ error: "Model not found in failed cache", modelId });
@@ -650,6 +665,9 @@ router.delete("/failed/:modelId", (req, res) => {
 // DELETE /api/models/failed - Clear all failed models
 router.delete("/failed", (req, res) => {
   clearFailedModels();
+  // Invalidate models cache so frontend sees changes immediately
+  cachedModels = null;
+  cacheTime = 0;
   res.json({ success: true, message: "All failed models cleared" });
 });
 

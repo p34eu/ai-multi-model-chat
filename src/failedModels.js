@@ -14,13 +14,14 @@ const __dirname = path.dirname(__filename);
 // Path to the failed models cache file
 const FAILED_MODELS_FILE = path.join(__dirname, "..", "data", "failed-models.json");
 
-// In-memory cache for failed models
-const failedModelsCache = new Set();
+// In-memory cache for failed models (map id -> { id, errorType, timestamp })
+const failedModelsCache = new Map();
 
 /**
  * Initialize failed models cache from file
  */
 export function initFailedModelsCache() {
+  console.log(`Failed models cache file path: ${FAILED_MODELS_FILE}`);
   // Ensure data directory exists
   const dataDir = path.dirname(FAILED_MODELS_FILE);
   if (!fs.existsSync(dataDir)) {
@@ -31,10 +32,27 @@ export function initFailedModelsCache() {
   if (fs.existsSync(FAILED_MODELS_FILE)) {
     try {
       const data = fs.readFileSync(FAILED_MODELS_FILE, "utf-8");
-      const failedModels = JSON.parse(data);
-      failedModels.forEach((modelId) => {
-        failedModelsCache.add(modelId);
+      const parsed = JSON.parse(data);
+
+      // Support both old format (array of strings) and new format (array of objects)
+      const list = Array.isArray(parsed) ? parsed : [];
+      list.forEach((entry) => {
+        if (typeof entry === "string") {
+          // migrate: string -> object
+          failedModelsCache.set(entry, {
+            id: entry,
+            errorType: "unknown",
+            timestamp: new Date().toISOString(),
+          });
+        } else if (entry && entry.id) {
+          failedModelsCache.set(entry.id, {
+            id: entry.id,
+            errorType: entry.errorType || "unknown",
+            timestamp: entry.timestamp || new Date().toISOString(),
+          });
+        }
       });
+
       console.log(`Loaded ${failedModelsCache.size} failed models from cache`);
     } catch (error) {
       console.warn("Failed to load failed models cache:", error.message);
@@ -44,13 +62,20 @@ export function initFailedModelsCache() {
 
 /**
  * Add a model to the failed models cache (permanent until manually removed)
+ * @param {string} modelId
+ * @param {string} errorType
  */
-export function addFailedModel(modelId) {
+export function addFailedModel(modelId, errorType = "unknown") {
   if (!modelId) return false;
-  
-  failedModelsCache.add(modelId);
+
+  failedModelsCache.set(modelId, {
+    id: modelId,
+    errorType: errorType || "unknown",
+    timestamp: new Date().toISOString(),
+  });
+
   persistFailedModels();
-  console.log(`Added ${modelId} to failed models cache`);
+  console.log(`Added ${modelId} to failed models cache (${errorType})`);
   return true;
 }
 
@@ -59,7 +84,7 @@ export function addFailedModel(modelId) {
  */
 export function removeFailedModel(modelId) {
   if (!modelId) return false;
-  
+
   const removed = failedModelsCache.delete(modelId);
   if (removed) {
     persistFailedModels();
@@ -79,7 +104,8 @@ export function isFailedModel(modelId) {
  * Get all failed models
  */
 export function getFailedModels() {
-  return Array.from(failedModelsCache);
+  // Return as an array of objects
+  return Array.from(failedModelsCache.values());
 }
 
 /**
@@ -87,7 +113,7 @@ export function getFailedModels() {
  */
 export function filterFailedModels(models) {
   if (failedModelsCache.size === 0) return models;
-  
+
   return models.filter((model) => {
     const id = model.id || model;
     return !failedModelsCache.has(id);
@@ -103,8 +129,8 @@ function persistFailedModels() {
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    
-    const data = JSON.stringify(Array.from(failedModelsCache), null, 2);
+
+    const data = JSON.stringify(Array.from(failedModelsCache.values()), null, 2);
     fs.writeFileSync(FAILED_MODELS_FILE, data, "utf-8");
   } catch (error) {
     console.error("Failed to persist failed models cache:", error.message);
@@ -116,7 +142,7 @@ function persistFailedModels() {
  */
 export function clearFailedModels() {
   failedModelsCache.clear();
-  
+
   // Delete the cache file
   try {
     if (fs.existsSync(FAILED_MODELS_FILE)) {
@@ -125,7 +151,7 @@ export function clearFailedModels() {
   } catch (error) {
     console.error("Failed to delete failed models cache file:", error.message);
   }
-  
+
   console.log("Cleared all failed models");
 }
 
