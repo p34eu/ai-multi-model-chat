@@ -28,25 +28,30 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Error Handling**: Failed responses filtered out and displayed separately
 - **Cache Busting**: Vite-powered build system with hashed assets for optimal caching
 - **Consistent Icons**: SVG icons for all elements
+
 ## 🎨 UI/UX Features
 
 ### Mobile Experience
+
 - **Responsive Layout**: Optimized for phones, tablets, and desktops
 - **Touch-Friendly**: 44px minimum touch targets for mobile devices
 - **Collapsed Navigation**: Model groups collapsed by default on mobile
 - **Horizontal Scrolling**: Tables scroll horizontally on small screens
 
 ### Error Management
+
 - **Smart Filtering**: Failed API responses automatically filtered from main results
 - **Separate Display**: Error responses shown in collapsible section
 - **Visual Indicators**: Clear distinction between successful and failed responses
 - **Graceful Degradation**: App continues working even with partial failures
 
 ### Performance & Caching
+
 - **Asset Optimization**: Vite builds with hashed filenames for cache busting
 - **Model Data Caching**: 10-minute cache for API model lists
 - **Compression**: LiteSpeed server compression for faster loading
 - **Lazy Loading**: Efficient resource loading and management
+
 ## � Project Structure
 
 ```
@@ -82,17 +87,20 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 This project uses **Vite** for modern frontend tooling with cache busting:
 
 ### Development
+
 ```bash
 npm run dev          # Start development server with hot reload
 ```
 
 ### Production Build
+
 ```bash
 npm run build        # Build optimized assets with hashed filenames
 npm run build:start  # Build and start production server
 ```
 
 ### Cache Busting
+
 - Automatic filename hashing for CSS/JS assets
 - Optimal browser caching strategy
 - LiteSpeed server compression enabled
@@ -100,20 +108,22 @@ npm run build:start  # Build and start production server
 ## �📦 Installation
 
 1. Clone the repository:
+
 ```bash
 git clone  https://github.com/p34eu/ai-multi-model-chat.git
 cd ai-multi-model-chat
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Create a `.env` file with your API keys (at least one provider required):
-**Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
-OpenAI and Google almost immediately hit the quota.
-   
+   **Note**: You only need to configure the API keys for the providers you want to use. The application will automatically detect and use all configured providers.
+   OpenAI and Google almost immediately hit the quota.
+
 ```env
 # Groq (Fast inference, Llama/Gemma models)
 GROQ_API_KEY=your_groq_api_key_here
@@ -137,8 +147,8 @@ COHERE_API_KEY=your_cohere_api_key_here
 VITE_APP_URL=https://your-domain.com
 ```
 
-
 4. Start the application:
+
 ```bash
 npm start
 ```
@@ -148,24 +158,31 @@ The application will be available at `http://localhost:3003`
 ## 🛠️ Development
 
 ### Development Server
+
 For development with hot reload and API proxying:
+
 ```bash
 npm run dev
 ```
 
 ### Production Build
+
 To build the application with cache busting:
+
 ```bash
 npm run build
 ```
 
 ### Build and Start
+
 To build and start the production server:
+
 ```bash
 npm run build:start
 ```
 
 ### Testing
+
 ```bash
 npm test
 ```
@@ -201,6 +218,7 @@ This project uses GitHub Actions for continuous integration and deployment:
 ## 🚀 Deployment
 
 ### LiteSpeed Server
+
 This application is configured for LiteSpeed web server with reverse proxy:
 
 - **Reverse Proxy**: Forwards requests to Node.js backend
@@ -209,6 +227,7 @@ This application is configured for LiteSpeed web server with reverse proxy:
 - **Static Files**: Direct serving of built assets
 
 ### PM2 Process Management
+
 ```bash
 # Start production servers
 pm2 start app.yml
@@ -221,6 +240,7 @@ pm2 restart all
 ```
 
 ### Environment Variables
+
 Configure API keys for different AI providers in `.env` file.
 
 ## 🎯 Usage
@@ -247,7 +267,7 @@ The application automatically filters and displays only chat-capable models from
 - **Anthropic**: 7 models (Claude-3 variants)
 - **Google AI**: 8 models (Gemini variants)
 - **Mistral**: 9 models (inactive - requires API key)
-- **Cohere**: 9 models 
+- **Cohere**: 9 models
 
 ## 🤝 Contributing
 
@@ -272,7 +292,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👨‍💻 Author
 
-**JQ** - [ https://github.com/p34eu]( https://github.com/p34eu)
+**JQ** - [ https://github.com/p34eu](https://github.com/p34eu)
 
 ## 🙏 Acknowledgments
 

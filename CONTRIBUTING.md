@@ -5,22 +5,26 @@
 ## Как да допринесете
 
 ### 1. Подготовка
+
 - Fork-нете репозитория
 - Клонирайте вашия fork: `git clone https://github.com/YOUR_USERNAME/ai-multi-model-tool.git`
 - Създайте feature branch: `git checkout -b feature/AmazingFeature`
 
 ### 2. Разработка
+
 - Пишете чист и четим код
 - Добавяйте коментари за сложна логика
 - Следвайте съществуващия code style
 - Добавяйте тестове за нови функционалности
 
 ### 3. Commit
+
 - Използвайте ясни commit съобщения
 - Пример: `feat: add dark mode toggle`
 - Категории: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 
 ### 4. Pull Request
+
 - Опишете подробно какво сте променили
 - Посочете свързани issues
 - Уверете се, че всички тестове преминават
@@ -29,17 +33,20 @@
 ## Code Style
 
 ### JavaScript
+
 - Използвайте ES6+ синтаксис
 - Camel case за променливи и функции
 - Pascal case за класове
 - Максимална дължина на ред: 100 символа
 
 ### CSS
+
 - Използвайте CSS custom properties за цветове
 - BEM методология за класове
 - Mobile-first подход
 
 ### HTML
+
 - Семантични тагове
 - Достъпност (alt атрибути, ARIA labels)
 

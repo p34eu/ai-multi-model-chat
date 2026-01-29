@@ -1,13 +1,14 @@
 // ===============================
 // GLOBAL STATE
 // ===============================
-let models = [];              // [{id, created, owner}]
-let answers = {};             // modelId -> { text, time }
+let models = []; // [{id, created, owner}]
+let answers = {}; // modelId -> { text, time }
 let lastQuestion = "";
 let selectedModel = null;
-let history = JSON.parse(localStorage.getItem('chatHistory')) || [];             // [{ question, answersSnapshot }]
-let currentLanguage = localStorage.getItem('language') || 'bg'; // 'bg' or 'en'
-let collapsedProviders = JSON.parse(localStorage.getItem('collapsedProviders')) || {}; // provider -> boolean
+let history = JSON.parse(localStorage.getItem("chatHistory")) || []; // [{ question, answersSnapshot }]
+let currentLanguage = localStorage.getItem("language") || "bg"; // 'bg' or 'en'
+let collapsedProviders =
+  JSON.parse(localStorage.getItem("collapsedProviders")) || {}; // provider -> boolean
 let providerStatus = {}; // provider status from backend
 let isResultsView = false; // Track if we're showing results
 let isSidebarCollapsed = false;
@@ -30,53 +31,53 @@ if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
 // ===============================
 const translations = {
   bg: {
-    title: 'AI Multi-Model Tool',
-    models: 'Модели',
-    refreshModels: '⟳',
-    expandCollapse: 'Разгъни/Сгъни всички',
-    history: 'История',
-    clearHistory: '🗑️',
-    messagePlaceholder: 'Напиши въпрос, който всички модели да отговорят...',
-    sendButton: 'Сравни всички модели',
-    typing: 'Моделите отговарят…',
-    modelInfo: 'Информация за модела',
-    responseTime: 'Време за отговор',
-    question: 'Въпрос',
-    noResponse: 'Този модел не е отговорил.',
-    comparisonTitle: 'Сравнение на моделите',
-    model: 'Модел',
-    time: 'Време',
-    answer: 'Отговор',
-    clearResults: 'Изчисти резултатите',
-    failedResponses: 'Неуспешни отговори',
-    language: 'Език',
-    english: 'English',
-    bulgarian: 'Български'
+    title: "AI Multi-Model Tool",
+    models: "Модели",
+    refreshModels: "⟳",
+    expandCollapse: "Разгъни/Сгъни всички",
+    history: "История",
+    clearHistory: "🗑️",
+    messagePlaceholder: "Напиши въпрос, който всички модели да отговорят...",
+    sendButton: "Сравни всички модели",
+    typing: "Моделите отговарят…",
+    modelInfo: "Информация за модела",
+    responseTime: "Време за отговор",
+    question: "Въпрос",
+    noResponse: "Този модел не е отговорил.",
+    comparisonTitle: "Сравнение на моделите",
+    model: "Модел",
+    time: "Време",
+    answer: "Отговор",
+    clearResults: "Изчисти резултатите",
+    failedResponses: "Неуспешни отговори",
+    language: "Език",
+    english: "English",
+    bulgarian: "Български",
   },
   en: {
-    title: 'AI Multi-Model Tool',
-    models: 'Models',
-    refreshModels: '⟳',
-    expandCollapse: 'Expand/Collapse All',
-    history: 'History',
-    clearHistory: '🗑️',
-    messagePlaceholder: 'Type a question for all models to answer...',
-    sendButton: 'Compare all models',
-    typing: 'Models are responding…',
-    modelInfo: 'Model Information',
-    responseTime: 'Response Time',
-    question: 'Question',
-    noResponse: 'This model did not respond.',
-    comparisonTitle: 'Model Comparison',
-    model: 'Model',
-    time: 'Time',
-    answer: 'Answer',
-    clearResults: 'Clear Results',
-    failedResponses: 'Failed Responses',
-    language: 'Language',
-    english: 'English',
-    bulgarian: 'Български'
-  }
+    title: "AI Multi-Model Tool",
+    models: "Models",
+    refreshModels: "⟳",
+    expandCollapse: "Expand/Collapse All",
+    history: "History",
+    clearHistory: "🗑️",
+    messagePlaceholder: "Type a question for all models to answer...",
+    sendButton: "Compare all models",
+    typing: "Models are responding…",
+    modelInfo: "Model Information",
+    responseTime: "Response Time",
+    question: "Question",
+    noResponse: "This model did not respond.",
+    comparisonTitle: "Model Comparison",
+    model: "Model",
+    time: "Time",
+    answer: "Answer",
+    clearResults: "Clear Results",
+    failedResponses: "Failed Responses",
+    language: "Language",
+    english: "English",
+    bulgarian: "Български",
+  },
 };
 
 // ===============================
@@ -88,7 +89,7 @@ function t(key) {
 
 function updateLanguage(lang) {
   currentLanguage = lang;
-  localStorage.setItem('language', lang);
+  localStorage.setItem("language", lang);
   applyTranslations();
 }
 
@@ -97,64 +98,78 @@ function updateLanguage(lang) {
  * Updates title, labels, buttons, table headers, and section headers with translated strings.
  * Handles optional elements gracefully with null checks before updating.
  * Replaces hardcoded text in model details and response messages with translated equivalents.
- * 
+ *
  * @function applyTranslations
  * @returns {void}
  */
 function applyTranslations() {
   // Update title
-  document.title = t('title');
-  document.querySelector('#title').textContent = t('title');
+  document.title = t("title");
+  document.querySelector("#title").textContent = t("title");
 
   // Update placeholders and buttons
-  document.querySelector('#message').placeholder = t('messagePlaceholder');
-  document.querySelector('#sendBtn').textContent = t('sendButton');
+  document.querySelector("#message").placeholder = t("messagePlaceholder");
+  document.querySelector("#sendBtn").textContent = t("sendButton");
 
   // Update section headers
- 
-  document.querySelectorAll('span[data-i18n="models"]').forEach(el => {
-  el.textContent =t('models');
-});
-  document.querySelectorAll('span[data-i18n="history"]').forEach(el => {
-  el.textContent =t('history');
-});
+
+  document.querySelectorAll('span[data-i18n="models"]').forEach((el) => {
+    el.textContent = t("models");
+  });
+  document.querySelectorAll('span[data-i18n="history"]').forEach((el) => {
+    el.textContent = t("history");
+  });
   // Update typing indicator
-  const typingText = document.querySelector('#typingText');
+  const typingText = document.querySelector("#typingText");
   if (typingText) {
-    typingText.textContent = t('typing');
+    typingText.textContent = t("typing");
   }
 
   // Update comparison table if exists
-  const comparisonTitle = document.querySelector('#comparisonTable h3');
+  const comparisonTitle = document.querySelector("#comparisonTable h3");
   if (comparisonTitle) {
-    comparisonTitle.textContent = t('comparisonTitle');
+    comparisonTitle.textContent = t("comparisonTitle");
   }
 
   // Update table headers
-  const tableHeaders = document.querySelectorAll('.compare th');
+  const tableHeaders = document.querySelectorAll(".compare th");
   if (tableHeaders.length >= 3) {
-    tableHeaders[0].textContent = t('model');
-    tableHeaders[1].textContent = t('time');
-    tableHeaders[2].textContent = t('answer');
+    tableHeaders[0].textContent = t("model");
+    tableHeaders[1].textContent = t("time");
+    tableHeaders[2].textContent = t("answer");
   }
 
   // Update selected model info
-  const selectedModelInfo = document.querySelector('#selectedModelInfo h2');
+  const selectedModelInfo = document.querySelector("#selectedModelInfo h2");
   if (selectedModelInfo) {
-    selectedModelInfo.textContent = t('modelInfo');
+    selectedModelInfo.textContent = t("modelInfo");
   }
 
-  const modelDetails = document.querySelectorAll('#selectedModelInfo .modelDetails div');
+  const modelDetails = document.querySelectorAll(
+    "#selectedModelInfo .modelDetails div"
+  );
   if (modelDetails.length >= 3) {
-    modelDetails[0].innerHTML = modelDetails[0].innerHTML.replace('Актуален към:', t('responseTime') + ':');
-    modelDetails[1].innerHTML = modelDetails[1].innerHTML.replace('Време за отговор:', t('responseTime') + ':');
-    modelDetails[2].innerHTML = modelDetails[2].innerHTML.replace('Въпрос:', t('question') + ':');
+    modelDetails[0].innerHTML = modelDetails[0].innerHTML.replace(
+      "Актуален към:",
+      t("responseTime") + ":"
+    );
+    modelDetails[1].innerHTML = modelDetails[1].innerHTML.replace(
+      "Време за отговор:",
+      t("responseTime") + ":"
+    );
+    modelDetails[2].innerHTML = modelDetails[2].innerHTML.replace(
+      "Въпрос:",
+      t("question") + ":"
+    );
   }
 
   // Update no response message
-  const noResponseEl = document.querySelector('#selectedModelAnswer');
-  if (noResponseEl && noResponseEl.textContent === 'Този модел не е отговорил.') {
-    noResponseEl.textContent = t('noResponse');
+  const noResponseEl = document.querySelector("#selectedModelAnswer");
+  if (
+    noResponseEl &&
+    noResponseEl.textContent === "Този модел не е отговорил."
+  ) {
+    noResponseEl.textContent = t("noResponse");
   }
 }
 
@@ -178,7 +193,7 @@ const modelIcons = {
   gemma: "💎",
   qwen: "🐉",
   mixtral: "🌪️",
-  default: "🤖"
+  default: "🤖",
 };
 
 function getModelIcon(id) {
@@ -190,16 +205,17 @@ function getModelIcon(id) {
     gpt: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#10a37f"/></svg>`,
     claude: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d97706"/></svg>`,
     gemini: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#4285f4"/></svg>`,
-    default: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#3b82f6"/></svg>`
+    default: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#3b82f6"/></svg>`,
   };
 
   if (!id || typeof id !== "string") return icons.default;
 
   // Remove provider prefixes for icon detection
-  const cleanId = id.toLowerCase()
-    .replace(/^openai-/, '')
-    .replace(/^anthropic-/, '')
-    .replace(/^google-/, '');
+  const cleanId = id
+    .toLowerCase()
+    .replace(/^openai-/, "")
+    .replace(/^anthropic-/, "")
+    .replace(/^google-/, "");
 
   if (cleanId.includes("llama")) return icons.llama;
   if (cleanId.includes("gemma")) return icons.gemma;
@@ -222,10 +238,10 @@ function groupModels(models) {
     Gemma: [],
     Qwen: [],
     Mixtral: [],
-    Other: []
+    Other: [],
   };
 
-  models.forEach(m => {
+  models.forEach((m) => {
     const id = m.id.toLowerCase();
     if (id.includes("llama")) groups.Llama.push(m);
     else if (id.includes("gemma")) groups.Gemma.push(m);
@@ -244,46 +260,51 @@ function getSpeedClass(time) {
 }
 
 function parseMarkdown(text) {
-  if (!text) return '';
+  if (!text) return "";
 
   // Escape HTML first
-  text = text.replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;');
+  text = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
   // Bold: **text** or __text__
-  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/__(.*?)__/g, "<strong>$1</strong>");
 
   // Italic: *text* or _text_
-  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  text = text.replace(/_(.*?)_/g, '<em>$1</em>');
+  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  text = text.replace(/_(.*?)_/g, "<em>$1</em>");
 
   // Inline code: `text`
-  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
 
   // Code blocks: ```text```
-  text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+  text = text.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
 
   // Headers: # ## ###
-  text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-  text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-  text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+  text = text.replace(/^### (.*$)/gm, "<h3>$1</h3>");
+  text = text.replace(/^## (.*$)/gm, "<h2>$1</h2>");
+  text = text.replace(/^# (.*$)/gm, "<h1>$1</h1>");
 
   // Line breaks
-  text = text.replace(/\n/g, '<br>');
+  text = text.replace(/\n/g, "<br>");
 
   return text;
 }
 
 function parseMarkdownTable(text) {
-  const lines = text.trim().split('\n');
+  const lines = text.trim().split("\n");
   if (lines.length < 2) return null; // Return null if not a table
 
   // Find table start: line starting with | followed by separator line
   let tableStart = -1;
   for (let i = 0; i < lines.length - 1; i++) {
-    if (lines[i].startsWith('|') && lines[i+1].includes('---') && lines[i+1].includes('|')) {
+    if (
+      lines[i].startsWith("|") &&
+      lines[i + 1].includes("---") &&
+      lines[i + 1].includes("|")
+    ) {
       tableStart = i;
       break;
     }
@@ -293,7 +314,7 @@ function parseMarkdownTable(text) {
   // Find table end: next non-table line or end
   let tableEnd = tableStart + 2;
   for (let i = tableStart + 2; i < lines.length; i++) {
-    if (!lines[i].startsWith('|')) {
+    if (!lines[i].startsWith("|")) {
       tableEnd = i;
       break;
     } else {
@@ -304,12 +325,18 @@ function parseMarkdownTable(text) {
   const tableLines = lines.slice(tableStart, tableEnd);
   if (tableLines.length < 2) return null;
 
-  const headers = tableLines[0].split('|').slice(1, -1).map(h => h.trim());
+  const headers = tableLines[0]
+    .split("|")
+    .slice(1, -1)
+    .map((h) => h.trim());
   const rows = [];
 
   for (let i = 2; i < tableLines.length; i++) {
-    if (tableLines[i].trim() === '') continue;
-    const cells = tableLines[i].split('|').slice(1, -1).map(c => c.trim());
+    if (tableLines[i].trim() === "") continue;
+    const cells = tableLines[i]
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim());
     if (cells.length === headers.length) {
       rows.push(cells);
     }
@@ -318,24 +345,24 @@ function parseMarkdownTable(text) {
   if (rows.length === 0) return null;
 
   // Create table element
-  const table = document.createElement('table');
-  table.className = 'markdown-table';
+  const table = document.createElement("table");
+  table.className = "markdown-table";
 
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  headers.forEach(h => {
-    const th = document.createElement('th');
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  headers.forEach((h) => {
+    const th = document.createElement("th");
     th.textContent = h;
     headerRow.appendChild(th);
   });
   thead.appendChild(headerRow);
   table.appendChild(thead);
 
-  const tbody = document.createElement('tbody');
-  rows.forEach(rowData => {
-    const row = document.createElement('tr');
-    rowData.forEach(cellData => {
-      const td = document.createElement('td');
+  const tbody = document.createElement("tbody");
+  rows.forEach((rowData) => {
+    const row = document.createElement("tr");
+    rowData.forEach((cellData) => {
+      const td = document.createElement("td");
       td.textContent = cellData;
       row.appendChild(td);
     });
@@ -356,7 +383,7 @@ async function loadModels() {
   if (!data.models || !Array.isArray(data.models)) {
     models = [];
   } else {
-    models = data.models.filter(m => m && m.id);
+    models = data.models.filter((m) => m && m.id);
   }
 
   // Store provider status
@@ -364,12 +391,15 @@ async function loadModels() {
 
   // Initialize collapsed state for all providers (active and inactive)
   const allProviders = Object.keys(providerStatus);
-  allProviders.forEach(provider => {
+  allProviders.forEach((provider) => {
     if (!(provider in collapsedProviders)) {
       collapsedProviders[provider] = isMobile(); // Collapse on mobile by default
     }
   });
-  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
+  localStorage.setItem(
+    "collapsedProviders",
+    JSON.stringify(collapsedProviders)
+  );
 
   renderModelList();
 }
@@ -379,7 +409,7 @@ function renderModelList() {
 
   // Group models by provider
   const grouped = {};
-  models.forEach(m => {
+  models.forEach((m) => {
     const provider = m.provider || "Unknown";
     if (!grouped[provider]) {
       grouped[provider] = [];
@@ -388,117 +418,130 @@ function renderModelList() {
   });
 
   // Show all providers (both active and inactive)
-  Object.keys(providerStatus).sort().forEach(providerName => {
-    const list = grouped[providerName] || [];
-    const status = providerStatus[providerName];
-    const isActive = status && status.enabled && status.hasApiKey;
+  Object.keys(providerStatus)
+    .sort()
+    .forEach((providerName) => {
+      const list = grouped[providerName] || [];
+      const status = providerStatus[providerName];
+      const isActive = status && status.enabled && status.hasApiKey;
 
-    // Create collapsible provider group
-    const providerGroup = document.createElement("div");
-    providerGroup.className = isActive ? "providerGroup" : "providerGroup inactive";
-    providerGroup.dataset.provider = providerName;
+      // Create collapsible provider group
+      const providerGroup = document.createElement("div");
+      providerGroup.className = isActive
+        ? "providerGroup"
+        : "providerGroup inactive";
+      providerGroup.dataset.provider = providerName;
 
-    const header = document.createElement("div");
-    header.className = isActive ? "modelGroupHeader" : "modelGroupHeader inactive";
-    header.setAttribute("role", "button");
-    header.setAttribute("aria-expanded", !collapsedProviders[providerName]);
-    header.setAttribute("tabindex", "0");
-    
-    const headerContent = document.createElement("div");
-    headerContent.className = "headerContent";
-    
-    const arrow = document.createElement("span");
-    arrow.className = "expandArrow";
-    arrow.innerHTML = collapsedProviders[providerName] ? "▶" : "▼";
-    
-    const providerTitle = document.createElement("span");
-    const statusBadge = isActive ? `` : ` <span class="inactiveBadge">⚠ No API Key</span>`;
-    providerTitle.innerHTML = `${providerName} (${list.length})${statusBadge}`;
-    
-    headerContent.appendChild(arrow);
-    headerContent.appendChild(providerTitle);
-    header.appendChild(headerContent);
-    
-    // Toggle collapse on click
-    header.addEventListener("click", () => toggleProvider(providerName));
-    header.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        toggleProvider(providerName);
-      }
-    });
+      const header = document.createElement("div");
+      header.className = isActive
+        ? "modelGroupHeader"
+        : "modelGroupHeader inactive";
+      header.setAttribute("role", "button");
+      header.setAttribute("aria-expanded", !collapsedProviders[providerName]);
+      header.setAttribute("tabindex", "0");
 
-    const modelsContainer = document.createElement("div");
-    modelsContainer.className = "providerModels";
-    if (collapsedProviders[providerName]) {
-      modelsContainer.style.display = "none";
-    }
+      const headerContent = document.createElement("div");
+      headerContent.className = "headerContent";
 
-    if (!isActive || list.length === 0) {
-      // Show inactive message
-      const inactiveMsg = document.createElement("div");
-      inactiveMsg.className = "inactiveMessage";
-      inactiveMsg.innerHTML = `<span class="inactiveIcon">🔒</span> Add <code>${providerName.toUpperCase()}_API_KEY</code> to .env file to enable this provider`;
-      modelsContainer.appendChild(inactiveMsg);
-    } else {
-      // Show active models
-      list.forEach(m => {
-      const id = m.id;
-      const provider = m.provider || "Unknown";
+      const arrow = document.createElement("span");
+      arrow.className = "expandArrow";
+      arrow.innerHTML = collapsedProviders[providerName] ? "▶" : "▼";
 
-      const li = document.createElement("li");
-      li.className = "modelItem";
-      li.dataset.modelId = id;
+      const providerTitle = document.createElement("span");
+      const statusBadge = isActive
+        ? ``
+        : ` <span class="inactiveBadge">⚠ No API Key</span>`;
+      providerTitle.innerHTML = `${providerName} (${list.length})${statusBadge}`;
 
-      const icon = document.createElement("span");
-      icon.className = "modelIcon";
-      icon.innerHTML = getModelIcon(id);
+      headerContent.appendChild(arrow);
+      headerContent.appendChild(providerTitle);
+      header.appendChild(headerContent);
 
-      const nameContainer = document.createElement("div");
-      nameContainer.className = "modelNameContainer";
-
-      const name = document.createElement("span");
-      name.className = "modelName";
-      name.textContent = id;
-
-      const providerBadge = document.createElement("span");
-      providerBadge.className = "modelProvider";
-      providerBadge.textContent = provider;
-
-      nameContainer.appendChild(name);
-   //   nameContainer.appendChild(providerBadge);
-
-      const status = document.createElement("span");
-      status.className = "modelStatus";
-      status.textContent = "…";
-
-      li.appendChild(icon);
-      li.appendChild(nameContainer);
-      li.appendChild(status);
-
-      li.onclick = () => selectModel(id);
-
-      modelsContainer.appendChild(li);
+      // Toggle collapse on click
+      header.addEventListener("click", () => toggleProvider(providerName));
+      header.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleProvider(providerName);
+        }
       });
-    }
-    
-    providerGroup.appendChild(header);
-    providerGroup.appendChild(modelsContainer);
-    modelListEl.appendChild(providerGroup);
-  });
+
+      const modelsContainer = document.createElement("div");
+      modelsContainer.className = "providerModels";
+      if (collapsedProviders[providerName]) {
+        modelsContainer.style.display = "none";
+      }
+
+      if (!isActive || list.length === 0) {
+        // Show inactive message
+        const inactiveMsg = document.createElement("div");
+        inactiveMsg.className = "inactiveMessage";
+        inactiveMsg.innerHTML = `<span class="inactiveIcon">🔒</span> Add <code>${providerName.toUpperCase()}_API_KEY</code> to .env file to enable this provider`;
+        modelsContainer.appendChild(inactiveMsg);
+      } else {
+        // Show active models
+        list.forEach((m) => {
+          const id = m.id;
+          const provider = m.provider || "Unknown";
+
+          const li = document.createElement("li");
+          li.className = "modelItem";
+          li.dataset.modelId = id;
+
+          const icon = document.createElement("span");
+          icon.className = "modelIcon";
+          icon.innerHTML = getModelIcon(id);
+
+          const nameContainer = document.createElement("div");
+          nameContainer.className = "modelNameContainer";
+
+          const name = document.createElement("span");
+          name.className = "modelName";
+          name.textContent = id;
+
+          const providerBadge = document.createElement("span");
+          providerBadge.className = "modelProvider";
+          providerBadge.textContent = provider;
+
+          nameContainer.appendChild(name);
+          //   nameContainer.appendChild(providerBadge);
+
+          const status = document.createElement("span");
+          status.className = "modelStatus";
+          status.textContent = "…";
+
+          li.appendChild(icon);
+          li.appendChild(nameContainer);
+          li.appendChild(status);
+
+          li.onclick = () => selectModel(id);
+
+          modelsContainer.appendChild(li);
+        });
+      }
+
+      providerGroup.appendChild(header);
+      providerGroup.appendChild(modelsContainer);
+      modelListEl.appendChild(providerGroup);
+    });
 }
 
 // Toggle provider collapse/expand
 function toggleProvider(providerName) {
   collapsedProviders[providerName] = !collapsedProviders[providerName];
-  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
-  
-  const providerGroup = document.querySelector(`.providerGroup[data-provider="${providerName}"]`);
+  localStorage.setItem(
+    "collapsedProviders",
+    JSON.stringify(collapsedProviders)
+  );
+
+  const providerGroup = document.querySelector(
+    `.providerGroup[data-provider="${providerName}"]`
+  );
   if (providerGroup) {
-    const header = providerGroup.querySelector('.modelGroupHeader');
-    const arrow = header.querySelector('.expandArrow');
-    const modelsContainer = providerGroup.querySelector('.providerModels');
-    
+    const header = providerGroup.querySelector(".modelGroupHeader");
+    const arrow = header.querySelector(".expandArrow");
+    const modelsContainer = providerGroup.querySelector(".providerModels");
+
     if (collapsedProviders[providerName]) {
       arrow.innerHTML = "▶";
       modelsContainer.style.display = "none";
@@ -513,13 +556,18 @@ function toggleProvider(providerName) {
 
 // Expand/collapse all providers
 function toggleAllProviders() {
-  const allCollapsed = Object.values(collapsedProviders).every(v => v === true);
-  
-  Object.keys(collapsedProviders).forEach(provider => {
+  const allCollapsed = Object.values(collapsedProviders).every(
+    (v) => v === true
+  );
+
+  Object.keys(collapsedProviders).forEach((provider) => {
     collapsedProviders[provider] = !allCollapsed;
   });
-  
-  localStorage.setItem('collapsedProviders', JSON.stringify(collapsedProviders));
+
+  localStorage.setItem(
+    "collapsedProviders",
+    JSON.stringify(collapsedProviders)
+  );
   renderModelList();
 }
 
@@ -527,7 +575,7 @@ document.getElementById("refreshModels").onclick = loadModels;
 document.getElementById("expandCollapseBtn").onclick = toggleAllProviders;
 document.getElementById("clearHistory").onclick = () => {
   history = [];
-  localStorage.removeItem('chatHistory');
+  localStorage.removeItem("chatHistory");
   renderHistory();
 };
 // ===============================
@@ -546,7 +594,7 @@ function renderHistory() {
 
       document
         .querySelectorAll(".modelItem")
-        .forEach(el => el.classList.remove("activeModel"));
+        .forEach((el) => el.classList.remove("activeModel"));
 
       selectedModelInfoEl.classList.add("hidden");
       selectedModelAnswerEl.classList.add("hidden");
@@ -563,11 +611,11 @@ function renderHistory() {
 function selectModel(id) {
   selectedModel = id;
 
-  document.querySelectorAll(".modelItem").forEach(el => {
+  document.querySelectorAll(".modelItem").forEach((el) => {
     el.classList.toggle("activeModel", el.dataset.modelId === id);
   });
 
-  const model = models.find(m => m.id === id);
+  const model = models.find((m) => m.id === id);
   const answer = answers[id];
 
   selectedModelInfoEl.classList.remove("hidden");
@@ -576,15 +624,17 @@ function selectModel(id) {
   selectedModelInfoEl.innerHTML = `
     <h2>${getModelIcon(id)} ${id}</h2>
     <div class="modelDetails">
-      <div><strong>${t('responseTime')}:</strong> ${formatCreated(model?.created)}</div>
-      <div><strong>${t('responseTime')}:</strong> ${answer ? answer.time + " ms" : "няма"}</div>
-      <div><strong>${t('question')}:</strong> ${lastQuestion || "няма"}</div>
+      <div><strong>${t("responseTime")}:</strong> ${formatCreated(
+    model?.created
+  )}</div>
+      <div><strong>${t("responseTime")}:</strong> ${
+    answer ? answer.time + " ms" : "няма"
+  }</div>
+      <div><strong>${t("question")}:</strong> ${lastQuestion || "няма"}</div>
     </div>
   `;
 
-  selectedModelAnswerEl.textContent = answer
-    ? answer.text
-    : t('noResponse');
+  selectedModelAnswerEl.textContent = answer ? answer.text : t("noResponse");
 }
 
 // ===============================
@@ -594,24 +644,24 @@ async function askAllModels(question) {
   answers = {};
   lastQuestion = question;
 
-  document.querySelectorAll(".modelStatus").forEach(el => {
+  document.querySelectorAll(".modelStatus").forEach((el) => {
     el.textContent = "…";
     el.className = "modelStatus";
   });
 
   // Show spinner and collapse UI on mobile
   typingIndicator.classList.remove("hidden");
-  
+
   comparisonTableEl.innerHTML = "";
   selectedModelInfoEl.classList.add("hidden");
   selectedModelAnswerEl.classList.add("hidden");
 
-  const tasks = models.map(m => askSingleModel(question, m.id));
+  const tasks = models.map((m) => askSingleModel(question, m.id));
   const results = await Promise.allSettled(tasks);
-  
+
   // Log any failed promises for debugging
   results.forEach((result, index) => {
-    if (result.status === 'rejected') {
+    if (result.status === "rejected") {
       console.error(`Model ${models[index].id} failed:`, result.reason);
     }
   });
@@ -621,9 +671,9 @@ async function askAllModels(question) {
 
   history.push({
     question,
-    answersSnapshot: { ...answers }
+    answersSnapshot: { ...answers },
   });
-  localStorage.setItem('chatHistory', JSON.stringify(history));
+  localStorage.setItem("chatHistory", JSON.stringify(history));
   renderHistory();
 }
 
@@ -634,7 +684,7 @@ async function askSingleModel(question, modelId) {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: question, model: modelId })
+      body: JSON.stringify({ message: question, model: modelId }),
     });
 
     if (!response.ok) {
@@ -652,8 +702,12 @@ async function askSingleModel(question, modelId) {
       if (!hasCompleted) {
         console.warn(`Timeout for model: ${modelId}`);
         hasCompleted = true;
-        answers[modelId] = { text: "❌ Request timeout", time: Math.round(performance.now() - start), error: true };
-        
+        answers[modelId] = {
+          text: "❌ Request timeout",
+          time: Math.round(performance.now() - start),
+          error: true,
+        };
+
         const status = document.querySelector(
           `.modelItem[data-model-id="${modelId}"] .modelStatus`
         );
@@ -705,13 +759,20 @@ async function askSingleModel(question, modelId) {
 
             // Choose icon based on error type
             let icon = "❌";
-            if (json.error.includes("429") || json.error.toLowerCase().includes("quota")) {
+            if (
+              json.error.includes("429") ||
+              json.error.toLowerCase().includes("quota")
+            ) {
               icon = "💰";
             } else if (json.error.includes("Your credit balance is too low")) {
               icon = "💰";
             }
 
-            answers[modelId] = { text: `${icon} Error: ${json.error}`, time, error: true };
+            answers[modelId] = {
+              text: `${icon} Error: ${json.error}`,
+              time,
+              error: true,
+            };
 
             const status = document.querySelector(
               `.modelItem[data-model-id="${modelId}"] .modelStatus`
@@ -731,7 +792,11 @@ async function askSingleModel(question, modelId) {
     const end = performance.now();
     const time = Math.round(end - start);
 
-    answers[modelId] = { text: `❌ Network Error: ${error.message}`, time, error: true };
+    answers[modelId] = {
+      text: `❌ Network Error: ${error.message}`,
+      time,
+      error: true,
+    };
 
     const status = document.querySelector(
       `.modelItem[data-model-id="${modelId}"] .modelStatus`
@@ -745,8 +810,12 @@ async function askSingleModel(question, modelId) {
   // Fallback: if no answer was stored, store a timeout error
   if (!answers[modelId]) {
     console.warn(`No answer stored for model: ${modelId}`);
-    answers[modelId] = { text: "❌ No response received", time: 0, error: true };
-    
+    answers[modelId] = {
+      text: "❌ No response received",
+      time: 0,
+      error: true,
+    };
+
     const status = document.querySelector(
       `.modelItem[data-model-id="${modelId}"] .modelStatus`
     );
@@ -773,9 +842,13 @@ function renderComparisonTable() {
   const successfulAnswers = {};
   const failedAnswers = {};
 
-  Object.keys(answers).forEach(id => {
+  Object.keys(answers).forEach((id) => {
     const ans = answers[id];
-    if (ans.error || ans.text.includes("❌") || ans.text.includes("No response")) {
+    if (
+      ans.error ||
+      ans.text.includes("❌") ||
+      ans.text.includes("No response")
+    ) {
       failedAnswers[id] = ans;
     } else {
       successfulAnswers[id] = ans;
@@ -783,9 +856,11 @@ function renderComparisonTable() {
   });
 
   comparisonTableEl.innerHTML = `
-    <h3>${t('comparisonTitle')}</h3>
-    <button id="clearResultsBtn" class="clear-btn">${t('clearResults')}</button>
-    <div class="questionTitle"><strong>${t('question')}:</strong> ${lastQuestion}</div>
+    <h3>${t("comparisonTitle")}</h3>
+    <button id="clearResultsBtn" class="clear-btn">${t("clearResults")}</button>
+    <div class="questionTitle"><strong>${t(
+      "question"
+    )}:</strong> ${lastQuestion}</div>
   `;
 
   // Render successful answers table
@@ -796,36 +871,40 @@ function renderComparisonTable() {
 
   // Render failed answers in collapsed section
   if (Object.keys(failedAnswers).length > 0) {
-    const failedSection = document.createElement('div');
-    failedSection.className = 'failed-responses collapsed';
+    const failedSection = document.createElement("div");
+    failedSection.className = "failed-responses collapsed";
     failedSection.innerHTML = `
       <button class="toggle-failed-btn">
         <span class="toggle-icon">▶</span>
-        ${t('failedResponses')} (${Object.keys(failedAnswers).length})
+        ${t("failedResponses")} (${Object.keys(failedAnswers).length})
       </button>
       <div class="failed-content">
     `;
 
     const failedTable = createComparisonTable(failedAnswers);
-    failedTable.classList.add('failed-table');
-    failedSection.querySelector('.failed-content').appendChild(failedTable);
-    failedSection.innerHTML += '</div>';
+    failedTable.classList.add("failed-table");
+    failedSection.querySelector(".failed-content").appendChild(failedTable);
+    failedSection.innerHTML += "</div>";
 
     comparisonTableEl.appendChild(failedSection);
 
     // Add toggle functionality
-    const toggleBtn = failedSection.querySelector('.toggle-failed-btn');
-    const content = failedSection.querySelector('.failed-content');
-    const icon = failedSection.querySelector('.toggle-icon');
+    const toggleBtn = failedSection.querySelector(".toggle-failed-btn");
+    const content = failedSection.querySelector(".failed-content");
+    const icon = failedSection.querySelector(".toggle-icon");
 
-    toggleBtn.addEventListener('click', () => {
-      failedSection.classList.toggle('collapsed');
-      icon.textContent = failedSection.classList.contains('collapsed') ? '▶' : '▼';
+    toggleBtn.addEventListener("click", () => {
+      failedSection.classList.toggle("collapsed");
+      icon.textContent = failedSection.classList.contains("collapsed")
+        ? "▶"
+        : "▼";
     });
   }
 
   // Add event listener to clear button
-  document.getElementById('clearResultsBtn').addEventListener('click', clearResults);
+  document
+    .getElementById("clearResultsBtn")
+    .addEventListener("click", clearResults);
 
   if (isMobile()) {
     setMobileControlsVisible(true);
@@ -833,34 +912,34 @@ function renderComparisonTable() {
 }
 
 function createComparisonTable(answerSet) {
-  const table = document.createElement('table');
-  table.className = 'compare';
+  const table = document.createElement("table");
+  table.className = "compare";
 
-  const headerRow = document.createElement('tr');
-  [t('model'), t('time'), t('answer')].forEach(header => {
-    const th = document.createElement('th');
+  const headerRow = document.createElement("tr");
+  [t("model"), t("time"), t("answer")].forEach((header) => {
+    const th = document.createElement("th");
     th.textContent = header;
     headerRow.appendChild(th);
   });
   table.appendChild(headerRow);
 
-  Object.keys(answerSet).forEach(id => {
+  Object.keys(answerSet).forEach((id) => {
     const ans = answerSet[id];
-    const row = document.createElement('tr');
+    const row = document.createElement("tr");
 
     // Model cell
-    const modelCell = document.createElement('td');
+    const modelCell = document.createElement("td");
     modelCell.innerHTML = `${getModelIcon(id)} ${id}`;
     row.appendChild(modelCell);
 
     // Time cell
-    const timeCell = document.createElement('td');
+    const timeCell = document.createElement("td");
     timeCell.textContent = `${ans.time} ms`;
     row.appendChild(timeCell);
 
     // Answer cell
-    const answerCell = document.createElement('td');
-    answerCell.className = 'answer-cell';
+    const answerCell = document.createElement("td");
+    answerCell.className = "answer-cell";
 
     const tableElement = parseMarkdownTable(ans.text);
     if (tableElement) {
@@ -880,28 +959,30 @@ function createComparisonTable(answerSet) {
 // UI COLLAPSE/EXPAND
 // ===============================
 function setMobileControlsVisible(visible) {
-  const newQueryBtn = document.getElementById('newQueryBtn');
+  const newQueryBtn = document.getElementById("newQueryBtn");
   if (!newQueryBtn) return;
 
   if (!isMobile()) {
-    newQueryBtn.classList.add('hidden');
+    newQueryBtn.classList.add("hidden");
     return;
   }
 
-  newQueryBtn.classList.toggle('hidden', !visible);
+  newQueryBtn.classList.toggle("hidden", !visible);
 }
 
 function applyCollapseState() {
-  document.getElementById('sidePanel').classList.toggle('collapsed', isSidebarCollapsed);
+  document
+    .getElementById("sidePanel")
+    .classList.toggle("collapsed", isSidebarCollapsed);
 
-  const sidebarBtn = document.getElementById('toggleSidebarBtn');
+  const sidebarBtn = document.getElementById("toggleSidebarBtn");
 
-  if (sidebarBtn) sidebarBtn.classList.toggle('active', !isSidebarCollapsed);
+  if (sidebarBtn) sidebarBtn.classList.toggle("active", !isSidebarCollapsed);
 
   // Show/hide backdrop on mobile when sidebar is open
-  const backdrop = document.getElementById('sidebarBackdrop');
+  const backdrop = document.getElementById("sidebarBackdrop");
   if (backdrop && isMobile()) {
-    backdrop.classList.toggle('visible', !isSidebarCollapsed);
+    backdrop.classList.toggle("visible", !isSidebarCollapsed);
   }
 }
 
@@ -952,58 +1033,64 @@ async function sendMessage() {
 }
 
 sendBtn.onclick = sendMessage;
-messageInput.addEventListener("keydown", e => {
+messageInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
 // New query button handler
-document.getElementById('newQueryBtn').addEventListener('click', () => {
+document.getElementById("newQueryBtn").addEventListener("click", () => {
   clearResults();
   messageInput.focus();
 });
 
 // Toggle buttons for mobile
-document.getElementById('toggleSidebarBtn')?.addEventListener('click', toggleSidebar);
-document.getElementById('closeSidebarBtn')?.addEventListener('click', () => {
+document
+  .getElementById("toggleSidebarBtn")
+  ?.addEventListener("click", toggleSidebar);
+document.getElementById("closeSidebarBtn")?.addEventListener("click", () => {
   if (!isSidebarCollapsed) {
     toggleSidebar();
   }
 });
-document.getElementById('sidebarBackdrop')?.addEventListener('click', () => {
+document.getElementById("sidebarBackdrop")?.addEventListener("click", () => {
   if (isMobile() && !isSidebarCollapsed) {
     toggleSidebar();
   }
 });
 
 // Tab switching
-document.getElementById('modelsTab')?.addEventListener('click', () => switchTab('models'));
-document.getElementById('historyTab')?.addEventListener('click', () => switchTab('history'));
+document
+  .getElementById("modelsTab")
+  ?.addEventListener("click", () => switchTab("models"));
+document
+  .getElementById("historyTab")
+  ?.addEventListener("click", () => switchTab("history"));
 
 function switchTab(tab) {
-  const modelsTab = document.getElementById('modelsTab');
-  const historyTab = document.getElementById('historyTab');
-  const modelsPanel = document.getElementById('modelsPanel');
-  const historyPanel = document.getElementById('historyPanel');
+  const modelsTab = document.getElementById("modelsTab");
+  const historyTab = document.getElementById("historyTab");
+  const modelsPanel = document.getElementById("modelsPanel");
+  const historyPanel = document.getElementById("historyPanel");
 
-  if (tab === 'models') {
-    modelsTab?.classList.add('active');
-    historyTab?.classList.remove('active');
-    modelsPanel?.classList.add('active');
-    historyPanel?.classList.remove('active');
-    modelsTab?.setAttribute('aria-selected', 'true');
-    historyTab?.setAttribute('aria-selected', 'false');
+  if (tab === "models") {
+    modelsTab?.classList.add("active");
+    historyTab?.classList.remove("active");
+    modelsPanel?.classList.add("active");
+    historyPanel?.classList.remove("active");
+    modelsTab?.setAttribute("aria-selected", "true");
+    historyTab?.setAttribute("aria-selected", "false");
   } else {
-    historyTab?.classList.add('active');
-    modelsTab?.classList.remove('active');
-    historyPanel?.classList.add('active');
-    modelsPanel?.classList.remove('active');
-    historyTab?.setAttribute('aria-selected', 'true');
-    modelsTab?.setAttribute('aria-selected', 'false');
+    historyTab?.classList.add("active");
+    modelsTab?.classList.remove("active");
+    historyPanel?.classList.add("active");
+    modelsPanel?.classList.remove("active");
+    historyTab?.setAttribute("aria-selected", "true");
+    modelsTab?.setAttribute("aria-selected", "false");
   }
 }
 
 // Prevent form submission
-document.getElementById('questionArea').addEventListener('submit', e => {
+document.getElementById("questionArea").addEventListener("submit", (e) => {
   e.preventDefault();
   sendMessage();
 });
@@ -1017,24 +1104,28 @@ applyTranslations();
 typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
 initMobileLayout();
 
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   initMobileLayout();
 });
 
 // Language switcher
-document.getElementById('langBg').addEventListener('click', () => {
-  updateLanguage('bg');
+document.getElementById("langBg").addEventListener("click", () => {
+  updateLanguage("bg");
   updateLanguageButtons();
 });
 
-document.getElementById('langEn').addEventListener('click', () => {
-  updateLanguage('en');
+document.getElementById("langEn").addEventListener("click", () => {
+  updateLanguage("en");
   updateLanguageButtons();
 });
 
 function updateLanguageButtons() {
-  document.getElementById('langBg').classList.toggle('active', currentLanguage === 'bg');
-  document.getElementById('langEn').classList.toggle('active', currentLanguage === 'en');
+  document
+    .getElementById("langBg")
+    .classList.toggle("active", currentLanguage === "bg");
+  document
+    .getElementById("langEn")
+    .classList.toggle("active", currentLanguage === "en");
 }
 
 // Initialize language buttons

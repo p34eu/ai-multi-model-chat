@@ -10,40 +10,52 @@ const PROVIDERS = {
     baseUrl: "https://api.groq.com/openai/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    get apiKey() { return process.env.GROQ_API_KEY; },
-    get enabled() { return !!process.env.GROQ_API_KEY; },
+    get apiKey() {
+      return process.env.GROQ_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.GROQ_API_KEY;
+    },
     modelPrefix: "groq-",
     formatMessage: (message, model) => ({
       model: model.replace("groq-", ""), // Remove prefix for API call
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }]
-    })
+      messages: [{ role: "user", content: message.trim() }],
+    }),
   },
   openai: {
     name: "OpenAI",
     baseUrl: "https://api.openai.com/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    get apiKey() { return process.env.OPENAI_API_KEY; },
-    get enabled() { return !!process.env.OPENAI_API_KEY; },
+    get apiKey() {
+      return process.env.OPENAI_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.OPENAI_API_KEY;
+    },
     modelPrefix: "openai-",
     formatMessage: (message, model) => ({
       model: model.replace("openai-", ""), // Remove prefix for API call
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }]
-    })
+      messages: [{ role: "user", content: message.trim() }],
+    }),
   },
   anthropic: {
     name: "Anthropic",
     baseUrl: "https://api.anthropic.com/v1",
     modelsUrl: "/models",
     chatUrl: "/messages",
-    get apiKey() { return process.env.ANTHROPIC_API_KEY; },
-    get enabled() { return !!process.env.ANTHROPIC_API_KEY; },
+    get apiKey() {
+      return process.env.ANTHROPIC_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.ANTHROPIC_API_KEY;
+    },
     modelPrefix: "anthropic-",
     formatMessage: (message, model) => ({
       model: model.replace("anthropic-", ""),
@@ -51,62 +63,77 @@ const PROVIDERS = {
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }]
+      messages: [{ role: "user", content: message.trim() }],
     }),
     headers: {
-      "anthropic-version": "2023-06-01"
-    }
+      "anthropic-version": "2023-06-01",
+    },
   },
   google: {
     name: "Google AI",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     modelsUrl: "/models",
-    chatUrl: (model) => `/models/${model.replace("google-", "")}:streamGenerateContent`,
-    get apiKey() { return process.env.GOOGLE_API_KEY; },
-    get enabled() { return !!process.env.GOOGLE_API_KEY; },
+    chatUrl: (model) =>
+      `/models/${model.replace("google-", "")}:streamGenerateContent`,
+    get apiKey() {
+      return process.env.GOOGLE_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.GOOGLE_API_KEY;
+    },
     modelPrefix: "google-",
     formatMessage: (message, model) => ({
-      contents: [{
-        parts: [{ text: message.trim() }]
-      }],
+      contents: [
+        {
+          parts: [{ text: message.trim() }],
+        },
+      ],
       generationConfig: {
         temperature: 0.8,
         topP: 0.9,
-        maxOutputTokens: 4096
-      }
-    })
+        maxOutputTokens: 4096,
+      },
+    }),
   },
   mistral: {
     name: "Mistral",
     baseUrl: "https://api.mistral.ai/v1",
     modelsUrl: "/models",
     chatUrl: "/chat/completions",
-    get apiKey() { return process.env.MISTRAL_API_KEY; },
-    get enabled() { return !!process.env.MISTRAL_API_KEY; },
+    get apiKey() {
+      return process.env.MISTRAL_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.MISTRAL_API_KEY;
+    },
     modelPrefix: "mistral-",
     formatMessage: (message, model) => ({
       model: model.replace("mistral-", ""),
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }]
-    })
+      messages: [{ role: "user", content: message.trim() }],
+    }),
   },
   cohere: {
     name: "Cohere",
     baseUrl: "https://api.cohere.com/v2",
     modelsUrl: "/models",
     chatUrl: "/chat",
-    get apiKey() { return process.env.COHERE_API_KEY; },
-    get enabled() { return !!process.env.COHERE_API_KEY; },
+    get apiKey() {
+      return process.env.COHERE_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.COHERE_API_KEY;
+    },
     modelPrefix: "cohere-",
     formatMessage: (message, model) => ({
       model: model.replace("cohere-", ""),
       messages: [{ role: "user", content: message.trim() }],
       temperature: 0.8,
-      stream: true
-    })
-  }
+      stream: true,
+    }),
+  },
 };
 
 // Helper function to determine provider from model ID
@@ -126,7 +153,7 @@ function handleStreamingResponse(provider, response, res) {
 
   if (provider.name === "Google AI") {
     // Handle Google AI streaming format
-    response.body.on("data", chunk => {
+    response.body.on("data", (chunk) => {
       buffer += chunk.toString();
       const lines = buffer.split("\n");
 
@@ -141,7 +168,10 @@ function handleStreamingResponse(provider, response, res) {
 
         try {
           const data = JSON.parse(payload);
-          if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+          if (
+            data.candidates &&
+            data.candidates[0]?.content?.parts?.[0]?.text
+          ) {
             const token = data.candidates[0].content.parts[0].text;
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
@@ -153,7 +183,7 @@ function handleStreamingResponse(provider, response, res) {
     });
   } else if (provider.name === "Anthropic") {
     // Handle Anthropic streaming format
-    response.body.on("data", chunk => {
+    response.body.on("data", (chunk) => {
       buffer += chunk.toString();
       const lines = buffer.split("\n");
 
@@ -174,7 +204,9 @@ function handleStreamingResponse(provider, response, res) {
         try {
           const json = JSON.parse(payload);
           if (json.delta?.text) {
-            res.write(`data: ${JSON.stringify({ token: json.delta.text })}\n\n`);
+            res.write(
+              `data: ${JSON.stringify({ token: json.delta.text })}\n\n`
+            );
           }
         } catch (parseErr) {
           continue;
@@ -183,7 +215,7 @@ function handleStreamingResponse(provider, response, res) {
     });
   } else if (provider.name === "Cohere") {
     // Handle Cohere v2 streaming format (SSE)
-    response.body.on("data", chunk => {
+    response.body.on("data", (chunk) => {
       buffer += chunk.toString();
       const events = buffer.split("\n\n");
 
@@ -220,7 +252,7 @@ function handleStreamingResponse(provider, response, res) {
       }
     });
   } else {
-    response.body.on("data", chunk => {
+    response.body.on("data", (chunk) => {
       buffer += chunk.toString();
       const lines = buffer.split("\n");
 
@@ -271,7 +303,11 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ error: "Missing message or model" });
   }
 
-  if (typeof message !== "string" || message.trim().length === 0 || typeof model !== "string") {
+  if (
+    typeof message !== "string" ||
+    message.trim().length === 0 ||
+    typeof model !== "string"
+  ) {
     return res.status(400).json({ error: "Invalid message or model format" });
   }
 
@@ -280,7 +316,9 @@ router.post("/", async (req, res) => {
 
   if (!provider.enabled) {
     return res.status(400).json({
-      error: `Provider ${provider.name} is not configured. Please set the ${provider.apiKey ? provider.apiKey.replace('_API_KEY', '') : 'API'}_API_KEY environment variable.`
+      error: `Provider ${provider.name} is not configured. Please set the ${
+        provider.apiKey ? provider.apiKey.replace("_API_KEY", "") : "API"
+      }_API_KEY environment variable.`,
     });
   }
 
@@ -290,14 +328,15 @@ router.post("/", async (req, res) => {
 
   try {
     // Build the request URL
-    const chatUrl = typeof provider.chatUrl === "function"
-      ? provider.chatUrl(model)
-      : provider.chatUrl;
+    const chatUrl =
+      typeof provider.chatUrl === "function"
+        ? provider.chatUrl(model)
+        : provider.chatUrl;
 
     const url = `${provider.baseUrl}${chatUrl}`;
     const headers = {
       "Content-Type": "application/json",
-      ...provider.headers
+      ...provider.headers,
     };
 
     // Set authorization based on provider
@@ -314,7 +353,7 @@ router.post("/", async (req, res) => {
     const response = await fetch(url, {
       method: "POST",
       headers,
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -339,10 +378,11 @@ router.post("/", async (req, res) => {
     }
 
     handleStreamingResponse(provider, response, res);
-
   } catch (err) {
     console.error("Chat error:", err);
-    res.write(`data: ${JSON.stringify({ error: "Internal server error" })}\n\n`);
+    res.write(
+      `data: ${JSON.stringify({ error: "Internal server error" })}\n\n`
+    );
     res.end();
   }
 });

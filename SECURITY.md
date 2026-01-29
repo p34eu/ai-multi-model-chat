@@ -16,11 +16,13 @@ If you discover a security vulnerability, please report it to us as follows:
 **Please do NOT report security vulnerabilities through public GitHub issues.**
 
 Instead, please report security vulnerabilities by emailing:
+
 - [jq@p34.eu](mailto:jq@p34.eu)
 
 You should receive a response within 48 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
 
 Please include the following information in your report:
+
 - A clear description of the vulnerability
 - Steps to reproduce the issue
 - Potential impact of the vulnerability
@@ -39,6 +41,7 @@ When using this application, please follow these security best practices:
 ## Responsible Disclosure
 
 We kindly ask that you:
+
 - Give us reasonable time to fix the issue before public disclosure
 - Avoid accessing or modifying user data
 - Do not perform DoS attacks or degrade service performance
