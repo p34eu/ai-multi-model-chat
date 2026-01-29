@@ -30,7 +30,7 @@
     "@semantic-release/github": "^11.0.6",
     "dotenv-cli": "^11.0.0",
     "prettier": "^2.8.8",
-    "semantic-release": "^24.2.9",
+    "semantic-release": "^25.0.2",
     "vite": "^7.3.1"
   }
 }
