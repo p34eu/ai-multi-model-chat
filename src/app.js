@@ -1010,6 +1010,9 @@ function renderComparisonTable() {
 }
 
 function createComparisonTable(answerSet) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "table-wrapper";
+
   const table = document.createElement("table");
   table.className = "compare";
 
@@ -1027,17 +1030,20 @@ function createComparisonTable(answerSet) {
 
     // Model cell
     const modelCell = document.createElement("td");
+    modelCell.setAttribute("data-label", t("model"));
     modelCell.innerHTML = `${getModelIcon(id)} ${id}`;
     row.appendChild(modelCell);
 
     // Time cell
     const timeCell = document.createElement("td");
+    timeCell.setAttribute("data-label", t("time"));
     timeCell.textContent = `${ans.time} ms`;
     row.appendChild(timeCell);
 
     // Answer cell
     const answerCell = document.createElement("td");
     answerCell.className = "answer-cell";
+    answerCell.setAttribute("data-label", t("answer"));
 
     const tableElement = parseMarkdownTable(ans.text);
     if (tableElement) {
@@ -1050,7 +1056,8 @@ function createComparisonTable(answerSet) {
     table.appendChild(row);
   });
 
-  return table;
+  wrapper.appendChild(table);
+  return wrapper;
 }
 
 // ===============================

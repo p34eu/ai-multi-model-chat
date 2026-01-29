@@ -888,6 +888,155 @@ table.compare tr:nth-child(even) td {
   background: rgba(15, 23, 42, 0.7);
 }
 
+/* Mobile-friendly table wrapper with horizontal scroll */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+
+table.compare {
+  min-width: 600px; /* Ensures table doesn't squash too much */
+}
+
+table.compare th,
+table.compare td {
+  border: 1px solid var(--border);
+  padding: 6px 8px;
+  vertical-align: top;
+  white-space: nowrap; /* Prevent text wrapping for cleaner mobile view */
+}
+
+table.compare td.answer-cell {
+  max-height: 200px;
+  overflow-y: auto;
+  word-wrap: break-word;
+  white-space: normal; /* Allow answer text to wrap */
+  min-width: 200px;
+}
+
+table.compare th {
+  background: #020617;
+  position: sticky;
+  /* Stick below the table header block (set dynamically via JS) */
+  top: var(--table-header-height, 0px);
+  z-index: 1;
+}
+
+/* Sticky first column for horizontal scrolling */
+table.compare td:first-child,
+table.compare th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+table.compare th:first-child {
+  background: #020617;
+  z-index: 3;
+}
+
+table.compare tr:nth-child(even) td {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+table.compare tr:nth-child(even) td:first-child {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+/* Card-based mobile layout for very small screens */
+@media (max-width: 480px) {
+  .table-wrapper {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+  
+  table.compare {
+    display: block;
+    min-width: 100%;
+  }
+  
+  table.compare thead {
+    display: none; /* Hide headers on very small screens */
+  }
+  
+  table.compare tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  table.compare tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    padding: 12px;
+  }
+  
+  table.compare tr:nth-child(even) td {
+    background: transparent;
+  }
+  
+  table.compare td {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    padding: 4px 0;
+    white-space: normal;
+  }
+  
+  table.compare td:first-child {
+    position: static;
+    background: transparent !important;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+  }
+  
+  /* Add labels before each cell */
+  table.compare td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  
+  table.compare td.answer-cell {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  table.compare td.answer-cell::before {
+    content: attr(data-label);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    display: block;
+  }
+}
+
+/* Tablet layout */
+@media (min-width: 481px) and (max-width: 768px) {
+  .table-wrapper {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  table.compare {
+    font-size: 12px;
+  }
+  
+  table.compare th,
+  table.compare td {
+    padding: 4px 6px;
+  }
+}
+
 /* Failed responses section */
 .failed-responses {
   margin-top: 20px;
@@ -959,6 +1108,23 @@ table.markdown-table td {
 table.markdown-table th {
   background: rgba(59, 130, 246, 0.1);
   font-weight: 600;
+}
+
+/* Mobile-responsive markdown tables */
+@media (max-width: 480px) {
+  table.markdown-table {
+    font-size: 11px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+  
+  table.markdown-table th,
+  table.markdown-table td {
+    padding: 3px 4px;
+    min-width: 80px;
+  }
 }
 
 /* Scrollbars */
