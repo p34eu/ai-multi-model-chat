@@ -9,13 +9,13 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
 [![Performance](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml)
 
-## � Screenshots
+##  Screenshots
 
 ![AI Model Comparison Tool - Main Interface](.github/screenshots/main-interface.png)
 
 *Compare responses from 95+ AI models across multiple providers in real-time, with performance metrics and smart filtering.*
 
-## �🚀 Features
+## 🚀 Features
 
 - **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, Google AI, Mistral, and Cohere
 - **Smart Model Filtering**: Automatically filters out non-chat models (embeddings, audio, vision-only, etc.) to show only chat-capable models
@@ -58,7 +58,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Compression**: LiteSpeed server compression for faster loading
 - **Lazy Loading**: Efficient resource loading and management
 
-## � Project Structure
+##  Project Structure
 
 ```
 ├── src/                    # Source files
@@ -77,7 +77,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 └── package.json           # Dependencies and scripts
 ```
 
-## �🛠️ Technologies
+## 🛠️ Technologies
 
 - **Backend**: Node.js v20+, Express.js
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
@@ -88,7 +88,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 - **Tests**: Node.js built-in test runner
 - **Process Management**: PM2 for production deployment
 
-## � Build System
+##  Build System
 
 This project uses **Vite** for modern frontend tooling with cache busting:
 
@@ -111,7 +111,7 @@ npm run build:start  # Build and start production server
 - Optimal browser caching strategy
 - LiteSpeed server compression enabled
 
-## �📦 Installation
+## 📦 Installation
 
 1. Clone the repository:
 
