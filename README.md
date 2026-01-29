@@ -9,7 +9,13 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 [![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
 [![Performance](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/performance.yml)
 
-## 🚀 Features
+## � Screenshots
+
+![AI Model Comparison Tool - Main Interface](.github/screenshots/main-interface.png)
+
+*Compare responses from 95+ AI models across multiple providers in real-time, with performance metrics and smart filtering.*
+
+## �🚀 Features
 
 - **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, Google AI, Mistral, and Cohere
 - **Smart Model Filtering**: Automatically filters out non-chat models (embeddings, audio, vision-only, etc.) to show only chat-capable models
