@@ -31,20 +31,20 @@ if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
 // ===============================
 const translations = {
   bg: {
-    title: "AI Multi-Model Tool",
+    title: "Сравнение на ИИ модели",
     models: "Модели",
     refreshModels: "⟳",
     expandCollapse: "Разгъни/Сгъни всички",
     history: "История",
     clearHistory: "🗑️",
     messagePlaceholder: "Напиши въпрос, който всички модели да отговорят...",
-    sendButton: "Сравни всички модели",
+    sendButton: "Изпрати",
     typing: "Моделите отговарят…",
     modelInfo: "Информация за модела",
     responseTime: "Време за отговор",
     question: "Въпрос",
     noResponse: "Този модел не е отговорил.",
-    comparisonTitle: "Сравнение на моделите",
+    comparisonTitle: "Получени резултати",
     model: "Модел",
     time: "Време",
     answer: "Отговор",
@@ -55,20 +55,20 @@ const translations = {
     bulgarian: "Български",
   },
   en: {
-    title: "AI Multi-Model Tool",
+    title: "AI Model Comparison Tool",
     models: "Models",
     refreshModels: "⟳",
     expandCollapse: "Expand/Collapse All",
     history: "History",
     clearHistory: "🗑️",
     messagePlaceholder: "Type a question for all models to answer...",
-    sendButton: "Compare all models",
+    sendButton: "Send",
     typing: "Models are responding…",
     modelInfo: "Model Information",
     responseTime: "Response Time",
     question: "Question",
     noResponse: "This model did not respond.",
-    comparisonTitle: "Model Comparison",
+    comparisonTitle: "Received Responses",
     model: "Model",
     time: "Time",
     answer: "Answer",
@@ -377,6 +377,7 @@ function parseMarkdownTable(text) {
 // LOAD MODELS
 // ===============================
 async function loadModels() {
+  console.debug("loadModels: fetching /api/models");
   const res = await fetch("/api/models");
   const data = await res.json();
 
@@ -401,10 +402,16 @@ async function loadModels() {
     JSON.stringify(collapsedProviders)
   );
 
+  console.debug("loadModels: loaded models", { count: models.length, providers: Object.keys(providerStatus).length });
   renderModelList();
 }
 
 function renderModelList() {
+  if (!modelListEl) {
+    console.error("renderModelList: #modelList element not found");
+    return;
+  }
+
   modelListEl.innerHTML = "";
 
   // Group models by provider
@@ -425,8 +432,8 @@ function renderModelList() {
       const status = providerStatus[providerName];
       const isActive = status && status.enabled && status.hasApiKey;
 
-      // Create collapsible provider group
-      const providerGroup = document.createElement("div");
+      // Create collapsible provider group as an <li> so it is a proper child of the #modelList <ul>
+      const providerGroup = document.createElement("li");
       providerGroup.className = isActive
         ? "providerGroup"
         : "providerGroup inactive";
@@ -466,7 +473,8 @@ function renderModelList() {
         }
       });
 
-      const modelsContainer = document.createElement("div");
+      // Use a nested <ul> for the provider models so screen readers announce them as lists
+      const modelsContainer = document.createElement("ul");
       modelsContainer.className = "providerModels";
       if (collapsedProviders[providerName]) {
         modelsContainer.style.display = "none";
@@ -524,6 +532,14 @@ function renderModelList() {
       providerGroup.appendChild(modelsContainer);
       modelListEl.appendChild(providerGroup);
     });
+
+    // If there are no providers/models, show a helpful placeholder
+    if (Object.keys(providerStatus).length === 0 || models.length === 0) {
+      const li = document.createElement("li");
+      li.className = "emptyPlaceholder";
+      li.textContent = "No models available";
+      modelListEl.appendChild(li);
+    }
 }
 
 // Toggle provider collapse/expand
@@ -582,12 +598,26 @@ document.getElementById("clearHistory").onclick = () => {
 // HISTORY
 // ===============================
 function renderHistory() {
+  if (!historyListEl) {
+    console.error("renderHistory: #historyList element not found");
+    return;
+  }
+
   historyListEl.innerHTML = "";
+
+  if (!history || history.length === 0) {
+    const li = document.createElement("li");
+    li.className = "emptyPlaceholder";
+    li.textContent = "No history";
+    historyListEl.appendChild(li);
+    return;
+  }
 
   history.forEach((item, idx) => {
     const li = document.createElement("li");
     li.textContent = `${idx + 1}. ${item.question}`;
     li.onclick = () => {
+      console.debug('history click', idx, item.question, Object.keys(item.answersSnapshot || {}).length);
       lastQuestion = item.question;
       answers = { ...item.answersSnapshot };
       selectedModel = null;
@@ -830,8 +860,22 @@ async function askSingleModel(question, modelId) {
 // COMPARISON TABLE
 // ===============================
 function renderComparisonTable() {
+  console.debug("renderComparisonTable() called", { lastQuestion, answersCount: Object.keys(answers).length });
+  // Always clear previous comparison content so switching history or models
+  // replaces the table instead of appending to older results.
+  if (comparisonTableEl) comparisonTableEl.innerHTML = "";
   if (!lastQuestion || !Object.keys(answers).length) {
-    comparisonTableEl.innerHTML = "";
+    // already cleared above
+    // clear any previously set spacing/vars on tables
+    if (comparisonTableEl) {
+      comparisonTableEl.querySelectorAll(":scope > table.compare").forEach((t) => {
+        t.style.marginTop = "";
+        t.style.removeProperty("--table-header-height");
+      });
+    }
+    // also clear the external results header so question disappears
+    const resultsHeaderEl = document.getElementById("resultsHeader");
+    if (resultsHeaderEl) resultsHeaderEl.innerHTML = "";
     if (isMobile()) {
       setMobileControlsVisible(false);
     }
@@ -855,13 +899,20 @@ function renderComparisonTable() {
     }
   });
 
-  comparisonTableEl.innerHTML = `
-    <h3>${t("comparisonTitle")}</h3>
-    <button id="clearResultsBtn" class="clear-btn">${t("clearResults")}</button>
-    <div class="questionTitle"><strong>${t(
-      "question"
-    )}:</strong> ${lastQuestion}</div>
-  `;
+  console.debug("renderComparisonTable building tables", { successful: Object.keys(successfulAnswers).length, failed: Object.keys(failedAnswers).length });
+
+  // Render header into the dedicated resultsHeader container (outside the scrollable table)
+  const resultsHeaderEl = document.getElementById("resultsHeader");
+  if (resultsHeaderEl) {
+    resultsHeaderEl.innerHTML = `
+      <div id="tableHeader">
+        <div id="tableTitle"><h3>${t("comparisonTitle")}</h3>
+          <button id="clearResultsBtn" class="clear-btn">${t("clearResults")}</button>
+        </div>
+        <div class="questionTitle"><strong>${t("question")}:</strong> ${lastQuestion}</div>
+      </div>
+    `;
+  }
 
   // Render successful answers table
   if (Object.keys(successfulAnswers).length > 0) {
@@ -873,39 +924,39 @@ function renderComparisonTable() {
   if (Object.keys(failedAnswers).length > 0) {
     const failedSection = document.createElement("div");
     failedSection.className = "failed-responses collapsed";
-    failedSection.innerHTML = `
-      <button class="toggle-failed-btn">
-        <span class="toggle-icon">▶</span>
-        ${t("failedResponses")} (${Object.keys(failedAnswers).length})
-      </button>
-      <div class="failed-content">
-    `;
+
+    const toggleBtn = document.createElement("button");
+    toggleBtn.className = "toggle-failed-btn";
+    const icon = document.createElement("span");
+    icon.className = "toggle-icon";
+    icon.textContent = "▶";
+    toggleBtn.appendChild(icon);
+    toggleBtn.insertAdjacentText("beforeend", ` ${t("failedResponses")} (${Object.keys(failedAnswers).length})`);
+
+    const failedContent = document.createElement("div");
+    failedContent.className = "failed-content";
 
     const failedTable = createComparisonTable(failedAnswers);
     failedTable.classList.add("failed-table");
-    failedSection.querySelector(".failed-content").appendChild(failedTable);
-    failedSection.innerHTML += "</div>";
+    failedContent.appendChild(failedTable);
+
+    failedSection.appendChild(toggleBtn);
+    failedSection.appendChild(failedContent);
 
     comparisonTableEl.appendChild(failedSection);
 
     // Add toggle functionality
-    const toggleBtn = failedSection.querySelector(".toggle-failed-btn");
-    const content = failedSection.querySelector(".failed-content");
-    const icon = failedSection.querySelector(".toggle-icon");
-
     toggleBtn.addEventListener("click", () => {
       failedSection.classList.toggle("collapsed");
-      icon.textContent = failedSection.classList.contains("collapsed")
-        ? "▶"
-        : "▼";
+      icon.textContent = failedSection.classList.contains("collapsed") ? "▶" : "▼";
     });
   }
 
   // Add event listener to clear button
-  document
-    .getElementById("clearResultsBtn")
-    .addEventListener("click", clearResults);
+  const clearBtn = document.getElementById("clearResultsBtn");
+  if (clearBtn) clearBtn.addEventListener("click", clearResults);
 
+  // No dynamic measurement needed: header is outside the scroll container and sticks under the top bar.
   if (isMobile()) {
     setMobileControlsVisible(true);
   }
@@ -959,15 +1010,8 @@ function createComparisonTable(answerSet) {
 // UI COLLAPSE/EXPAND
 // ===============================
 function setMobileControlsVisible(visible) {
-  const newQueryBtn = document.getElementById("newQueryBtn");
-  if (!newQueryBtn) return;
-
-  if (!isMobile()) {
-    newQueryBtn.classList.add("hidden");
-    return;
-  }
-
-  newQueryBtn.classList.toggle("hidden", !visible);
+  
+  
 }
 
 function applyCollapseState() {
@@ -986,6 +1030,12 @@ function applyCollapseState() {
   }
 }
 
+// Toggle the sidebar open/closed and update UI
+function toggleSidebar() {
+  isSidebarCollapsed = !isSidebarCollapsed;
+  applyCollapseState();
+}
+
 function initMobileLayout() {
   if (!isMobile()) {
     if (!hasMobileInit) {
@@ -999,15 +1049,9 @@ function initMobileLayout() {
   }
 
   applyCollapseState();
+  
 }
 
-function toggleSidebar() {
-  isSidebarCollapsed = !isSidebarCollapsed;
-  applyCollapseState();
-}
-
-// ===============================
-// CLEAR RESULTS
 // ===============================
 function clearResults() {
   answers = {};
@@ -1016,6 +1060,18 @@ function clearResults() {
   selectedModelInfoEl.classList.add("hidden");
   selectedModelAnswerEl.classList.add("hidden");
   typingIndicator.classList.add("hidden");
+  // remove comparison container spacing set by header measurement
+  if (comparisonTableEl) {
+    comparisonTableEl.style.removeProperty("--table-header-height");
+    comparisonTableEl.style.paddingTop = "";
+    comparisonTableEl.querySelectorAll(":scope > table.compare").forEach((t) => {
+      t.style.marginTop = "";
+      t.style.removeProperty("--table-header-height");
+    });
+  }
+  // clear the external results header
+  const resultsHeaderEl = document.getElementById("resultsHeader");
+  if (resultsHeaderEl) resultsHeaderEl.innerHTML = "";
   if (isMobile()) {
     setMobileControlsVisible(true);
   }
@@ -1037,11 +1093,7 @@ messageInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendMessage();
 });
 
-// New query button handler
-document.getElementById("newQueryBtn").addEventListener("click", () => {
-  clearResults();
-  messageInput.focus();
-});
+ 
 
 // Toggle buttons for mobile
 document
@@ -1130,3 +1182,4 @@ function updateLanguageButtons() {
 
 // Initialize language buttons
 updateLanguageButtons();
+

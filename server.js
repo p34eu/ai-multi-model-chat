@@ -1,4 +1,5 @@
 import express from "express";
+import compression from "compression";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -12,6 +13,9 @@ import modelsRoute from "./src/routes/models.js";
 import chatRoute from "./src/routes/chat.js";
 
 const app = express();
+
+// Compress responses to reduce transfer size (gzip). Place this before static middleware.
+app.use(compression({ level: 6 }));
 
 app.use(express.json());
 
