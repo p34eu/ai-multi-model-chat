@@ -768,6 +768,9 @@ function renderModelList() {
       const countsSpan = document.createElement("span");
       countsSpan.className = "providerCounts";
       countsSpan.innerHTML = `(${selectedCount}), (${activeCount}) ${t("of")} (${totalCount})${statusBadge}`;
+      
+      // Add title attributes to describe the numbers
+      countsSpan.title = `Selected: ${selectedCount}, Active: ${activeCount}, Total: ${totalCount}`;
 
       // Hide provider button
       const providerHideBtn = document.createElement("button");

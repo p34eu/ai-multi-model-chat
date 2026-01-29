@@ -6,6 +6,10 @@ import {
   markModelWorking,
 } from "../modelStatus.js";
 
+import {
+  addFailedModel,
+} from "../failedModels.js";
+
 const router = express.Router();
 
 // Provider configurations (same as in models.js)
@@ -466,7 +470,13 @@ router.post("/", async (req, res) => {
       
       if (isQuotaError) {
         markModelQuotaExceeded(model);
-        console.log(`Marked model ${model} as quota exceeded`);
+        // Also add to permanent failed models cache
+        addFailedModel(model);
+        console.log(`Marked model ${model} as quota exceeded and added to failed cache`);
+      } else {
+        // Add to permanent failed models cache for non-quota errors
+        addFailedModel(model);
+        console.log(`Added model ${model} to failed models cache`);
       }
       
       let errorDetails = `${provider.name} API request failed (Status: ${response.status})`;

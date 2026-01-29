@@ -12,8 +12,21 @@ import {
   isKnownFreeModel,
 } from "../modelStatus.js";
 
+import {
+  initFailedModelsCache,
+  filterFailedModels,
+  getFailedModels,
+  addFailedModel,
+  removeFailedModel,
+  clearFailedModels,
+  isFailedModel,
+} from "../failedModels.js";
+
 // Initialize the model status cache
 initModelStatusCache();
+
+// Initialize the failed models cache
+initFailedModelsCache();
 
 const router = express.Router();
 
@@ -515,6 +528,8 @@ router.get("/", async (req, res) => {
     // Sort models by provider and name
     const sortedModels = allModels
       .filter((m) => m.id)
+      // Filter out failed models permanently
+      .filter((m) => !isFailedModel(m.id))
       .sort((a, b) => {
         if (a.provider !== b.provider) {
           return a.provider.localeCompare(b.provider);
@@ -588,11 +603,54 @@ router.get("/check/:modelId", (req, res) => {
   // Also check if it's a known free model
   const isFree = isKnownFreeModel(modelId);
   
+  // Check if model is in failed cache
+  const isFailed = isFailedModel(modelId);
+  
   res.json({
     modelId,
     ...status,
     isKnownFree: isFree,
+    isFailedModel: isFailed,
   });
+});
+
+// GET /api/models/failed - Get all failed models
+router.get("/failed", (req, res) => {
+  const failedModels = getFailedModels();
+  res.json({
+    count: failedModels.length,
+    models: failedModels,
+  });
+});
+
+// POST /api/models/failed - Add a model to failed cache
+router.post("/failed", (req, res) => {
+  const { modelId } = req.body;
+  
+  if (!modelId) {
+    return res.status(400).json({ error: "modelId is required" });
+  }
+  
+  addFailedModel(modelId);
+  res.json({ success: true, modelId, message: `Model ${modelId} added to failed cache` });
+});
+
+// DELETE /api/models/failed/:modelId - Remove a model from failed cache
+router.delete("/failed/:modelId", (req, res) => {
+  const { modelId } = req.params;
+  
+  const removed = removeFailedModel(modelId);
+  if (removed) {
+    res.json({ success: true, modelId, message: `Model ${modelId} removed from failed cache` });
+  } else {
+    res.status(404).json({ error: "Model not found in failed cache", modelId });
+  }
+});
+
+// DELETE /api/models/failed - Clear all failed models
+router.delete("/failed", (req, res) => {
+  clearFailedModels();
+  res.json({ success: true, message: "All failed models cleared" });
 });
 
 export default router;
