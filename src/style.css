@@ -430,8 +430,16 @@ button:hover {
 }
 
 #modelList {
-  flex: 1;
-  max-height: 55vh;
+  flex: 1 1 auto;
+  max-height: none;
+}
+
+/* Ensure tab content fills vertical space on larger screens too */
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Provider groups */
@@ -1002,10 +1010,17 @@ table.markdown-table th {
     align-items: stretch;
   }
 
+  /* Let the top bar grow on mobile and push content down instead of overlapping it */
+  #app {
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+  }
+
   #mainArea {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
     position: relative;
+    height: auto;
   }
 
   #sidePanel {
@@ -1031,6 +1046,63 @@ table.markdown-table th {
     width: 100%;
     flex-direction: column;
     gap: 8px;
+  }
+
+  /* Fix tab content and provider list layout inside the mobile drawer */
+  #sidePanel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tab-content {
+    width: 100%;
+    padding: 12px 12px 20px 12px;
+    box-sizing: border-box;
+    /* Take remaining vertical space so content isn't vertically centered */
+    flex: 1 1 auto;
+    overflow: auto;
+    min-height: 0; /* allow flex children to shrink properly */
+  }
+
+  /* Remove the negative left margin that was shifting provider lists */
+  .providerModels {
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  /* Ensure list items use full width */
+  #modelList li,
+  #historyList li,
+  .modelItem {
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 8px;
+  }
+
+  /* Ensure tab panels and lists stretch to the full drawer width and are not centered */
+  .tab-panel {
+    width: 100%;
+    align-self: stretch;
+    box-sizing: border-box;
+    padding: 0;
+    flex: 1 1 auto;
+    overflow: auto;
+  }
+
+  #modelList,
+  #historyList,
+  .providerModels,
+  .providerGroup {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  .modelItem {
+    justify-content: flex-start;
+    padding-right: 12px;
   }
 
   #message {
@@ -1066,6 +1138,16 @@ table.markdown-table th {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     z-index: 1000;
     border: 1px solid var(--border);
+  }
+
+  /* On narrow screens, disable sticky results header so it won't overlap an expanded topBar */
+  #resultsHeader {
+    position: relative;
+    top: auto;
+    z-index: 40;
+    box-shadow: none;
+    background-color: transparent;
+    padding: 0 0 6px 0;
   }
 }
 
@@ -1103,8 +1185,9 @@ table.markdown-table th {
     font-size: 14px;
   }
 
+  /* Keep sidePanel full height on very small devices when shown as drawer */
   #sidePanel {
-    height: 200px;
+    height: 100%;
     padding: 6px;
   }
 
@@ -1138,9 +1221,13 @@ table.markdown-table th {
   }
 
   /* Adjust list heights for smaller screens */
+  /* Allow lists to use remaining space inside the drawer; don't clamp to a fixed height */
   #modelList,
   #historyList {
-    max-height: 140px;
+    max-height: none;
+    flex: 1 1 auto;
+    overflow: auto;
+    min-height: 0;
   }
 
   .model-status {
