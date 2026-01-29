@@ -203,7 +203,21 @@ button:hover {
 .toggle-btn.active span:nth-child(3) {
   transform: translateY(0) rotate(-45deg);
 }
-
+.github-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-left: 12px;
+}
 .github-badge svg {
   flex-shrink: 0;
 }
@@ -278,7 +292,7 @@ button:hover {
 /* Tab Navigation */
 .tab-nav {
   display: flex;
-  gap: 0;
+  gap: 4px;
   background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding: 8px 8px 0 8px;
@@ -380,7 +394,13 @@ button:hover {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
-
+#modelsCount{
+  
+  color: var(--text-muted);
+  margin-bottom: 8px; font-size:10px;
+  
+  align-content: center;
+}
 .sectionHeader {
   display: flex;
   justify-content: flex-end;
@@ -1164,8 +1184,8 @@ table.markdown-table th {
   }
 
   .github-badge {
-    font-size: 1rem;
-    padding: 0px 0px;
+    display: none;
+    font-size:12px;
   }
 
   .lang-btn {

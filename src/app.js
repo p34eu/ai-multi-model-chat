@@ -53,6 +53,11 @@ const translations = {
     language: "Език",
     english: "English",
     bulgarian: "Български",
+    loaded1:"Заредени ",
+    loaded2:" модела от ",
+    loaded3:" доставчици",
+
+  
   },
   en: {
     title: "AI Model Comparison Tool",
@@ -77,6 +82,9 @@ const translations = {
     language: "Language",
     english: "English",
     bulgarian: "Български",
+    loaded1:"Loaded ",
+    loaded2:" models from ",
+    loaded3:" providers",
   },
 };
 
@@ -161,6 +169,10 @@ function applyTranslations() {
       "Въпрос:",
       t("question") + ":"
     );
+
+  //     ? `Заредени ${models.length} модела от ${allProviders.length} доставчици`
+      //: `Loaded ${models.length} models from ${allProviders.length} providers`;
+  
   }
 
   // Update no response message
@@ -170,6 +182,12 @@ function applyTranslations() {
     noResponseEl.textContent === "Този модел не е отговорил."
   ) {
     noResponseEl.textContent = t("noResponse");
+  }
+
+    const modelsCountEl = document.getElementById("modelsCount");
+  if (modelsCountEl) {
+     const allProviders = Object.keys(providerStatus);
+    modelsCountEl.textContent = `${t("loaded1")}${models.length}${t("loaded2")}${allProviders.length}${t("loaded3")}`;
   }
 }
 
@@ -401,8 +419,14 @@ async function loadModels() {
     "collapsedProviders",
     JSON.stringify(collapsedProviders)
   );
-
-  console.debug("loadModels: loaded models", { count: models.length, providers: Object.keys(providerStatus).length });
+ 
+  console.debug(currentLanguage,"loadModels: loaded models", { count: models.length, providers: Object.keys(providerStatus).length });
+ 
+  const modelsCountEl = document.getElementById("modelsCount");
+  if (modelsCountEl) {
+     const allProviders = Object.keys(providerStatus);
+    modelsCountEl.textContent = `${t("loaded1")}${models.length}${t("loaded2")}${allProviders.length}${t("loaded3")}`;
+  }
   renderModelList();
 }
 
