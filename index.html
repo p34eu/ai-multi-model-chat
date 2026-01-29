@@ -137,6 +137,23 @@
                     <path d="M8 1v3l3 2" />
                   </svg>
                 </button>
+                <button id="resetCache" class="btn" aria-label="Reset model cache" title="Reset cached model statuses">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path d="M2 10a6 6 0 1 0 0-12 6 6 0 0 0 0 12z" />
+                    <path d="M2 4l2 2 2-2" />
+                  </svg>
+                </button>
+                <button id="selectAllBtn" class="btn" aria-label="Select all models" title="Select All">
+                  ✓
+                </button>
+                <button id="deselectAllBtn" class="btn" aria-label="Deselect all models" title="Deselect All">
+                  ✗
+                </button>
+                <button id="selectSuccessfulBtn" class="btn" aria-label="Select all last successful models" title="Select Last Successful">
+                  ✓✓
+                </button>
+                <span id="selectedCount" class="selectedCount">0/0</span>
               </div>
             </div>
             <ul id="modelList" aria-label="Available AI models"></ul>

@@ -10,6 +10,11 @@ let currentLanguage = localStorage.getItem("language") || "bg"; // 'bg' or 'en'
 let collapsedProviders =
   JSON.parse(localStorage.getItem("collapsedProviders")) || {}; // provider -> boolean
 let providerStatus = {}; // provider status from backend
+let modelStatuses = {}; // modelId -> { status, timestamp }
+let selectedModels = JSON.parse(localStorage.getItem("selectedModels")) || []; // array of model IDs to send to
+let hiddenModels = JSON.parse(localStorage.getItem("hiddenModels")) || []; // array of model IDs user marked as not interested
+let hiddenProviders = JSON.parse(localStorage.getItem("hiddenProviders")) || []; // array of provider names to hide completely
+let successfulModels = []; // array of model IDs that responded successfully in the last query
 let isResultsView = false; // Track if we're showing results
 let isSidebarCollapsed = false;
 let hasMobileInit = false;
@@ -57,6 +62,17 @@ const translations = {
     loaded1:"Заредени ",
     loaded2:" модела от ",
     loaded3:" доставчици",
+    resetCache: "Нулирай кеша",
+    resetCacheSuccess: "Кешът е нулиран",
+    selectAll: "Избери всички",
+    deselectAll: "Премахни избора",
+    selectSuccessful: "Избери успешните",
+    hideModel: "Скрий модела",
+    showModel: "Покажи модела",
+    of: "от",
+    hiddenModels: "Скрити модели",
+    sendToSelected: "Изпрати към избраните",
+    noModelsSelected: "Моля, изберете поне един модел",
 
   
   },
@@ -87,6 +103,17 @@ const translations = {
     loaded1:"Loaded ",
     loaded2:" models from ",
     loaded3:" providers",
+    resetCache: "Reset Cache",
+    resetCacheSuccess: "Cache has been reset",
+    selectAll: "Select All",
+    deselectAll: "Deselect All",
+    selectSuccessful: "Select Successful",
+    hideModel: "Hide model",
+    showModel: "Show model",
+    of: "of",
+    hiddenModels: "Hidden models",
+    sendToSelected: "Send to selected",
+    noModelsSelected: "Please select at least one model",
   },
 };
 
@@ -242,6 +269,9 @@ function getModelIcon(id) {
     gpt: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#10a37f"/></svg>`,
     claude: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d97706"/></svg>`,
     gemini: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#4285f4"/></svg>`,
+    deepseek: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#6366f1"/></svg>`,
+    openrouter: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#f97316"/></svg>`,
+    huggingface: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ffd700"/></svg>`,
     default: `<svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#3b82f6"/></svg>`,
   };
 
@@ -252,7 +282,10 @@ function getModelIcon(id) {
     .toLowerCase()
     .replace(/^openai-/, "")
     .replace(/^anthropic-/, "")
-    .replace(/^google-/, "");
+    .replace(/^google-/, "")
+    .replace(/^deepseek-/, "")
+    .replace(/^openrouter-/, "")
+    .replace(/^huggingface-/, "");
 
   if (cleanId.includes("llama")) return icons.llama;
   if (cleanId.includes("gemma")) return icons.gemma;
@@ -261,6 +294,9 @@ function getModelIcon(id) {
   if (cleanId.includes("gpt")) return icons.gpt;
   if (cleanId.includes("claude")) return icons.claude;
   if (cleanId.includes("gemini")) return icons.gemini;
+  if (cleanId.includes("deepseek")) return icons.deepseek;
+  if (cleanId.includes("openrouter")) return icons.openrouter;
+  if (cleanId.includes("hugging") || cleanId.includes("hf")) return icons.huggingface;
   return icons.default;
 }
 
@@ -440,6 +476,9 @@ async function loadModels() {
   );
  
   console.debug(currentLanguage,"loadModels: loaded models", { count: models.length, providers: Object.keys(providerStatus).length });
+  
+  // Also fetch model statuses from server
+  await fetchModelStatuses();
  
   const modelsCountEl = document.getElementById("modelsCount");
   if (modelsCountEl) {
@@ -447,6 +486,211 @@ async function loadModels() {
     modelsCountEl.textContent = `${t("loaded1")}${models.length}${t("loaded2")}${allProviders.length}${t("loaded3")}`;
   }
   renderModelList();
+}
+
+// ===============================
+// MODEL STATUS CACHE
+// ===============================
+
+// Fetch model statuses from server
+async function fetchModelStatuses() {
+  try {
+    const res = await fetch("/api/models/status");
+    if (res.ok) {
+      modelStatuses = await res.json();
+      console.debug("Model statuses loaded:", Object.keys(modelStatuses).length);
+    }
+  } catch (e) {
+    console.warn("Failed to fetch model statuses:", e.message);
+  }
+}
+
+// Reset model status cache on server
+async function resetModelCache() {
+  try {
+    const res = await fetch("/api/models/status/reset", { method: "POST" });
+    if (res.ok) {
+      modelStatuses = {};
+      // Show success message
+      const msg = document.createElement("div");
+      msg.className = "successMessage";
+      msg.textContent = t("resetCacheSuccess");
+      document.body.appendChild(msg);
+      setTimeout(() => msg.remove(), 3000);
+      // Re-render model list
+      renderModelList();
+    }
+  } catch (e) {
+    console.error("Failed to reset model cache:", e.message);
+  }
+}
+
+// Check if a model should be hidden based on status (quota/paid only)
+// Note: hiddenModels are NOT hidden from rendering, only from sending
+function shouldHideModel(modelId) {
+  const status = modelStatuses[modelId];
+  if (status && (status.status === "quota_exceeded" || status.status === "paid")) {
+    return true;
+  }
+  return false;
+}
+
+// Check if a model is user-hidden (for sending)
+function isModelUserHidden(modelId) {
+  return hiddenModels.includes(modelId);
+}
+
+// Check if a model is selected for sending
+function isModelSelected(modelId) {
+  return selectedModels.includes(modelId);
+}
+
+// Toggle model selection
+function toggleModelSelection(modelId) {
+  const index = selectedModels.indexOf(modelId);
+  if (index === -1) {
+    selectedModels.push(modelId);
+  } else {
+    selectedModels.splice(index, 1);
+  }
+  localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+  updateSelectionCount();
+}
+
+// Select all visible models
+function selectAllModels() {
+  models.forEach((m) => {
+    // Skip if model should be hidden (quota exceeded, paid, etc.)
+    if (shouldHideModel(m.id)) return;
+    // Skip if model belongs to a hidden provider
+    if (isProviderHidden(m.provider)) return;
+    // Skip if model is user-hidden
+    if (isModelUserHidden(m.id)) return;
+    // Skip if already selected
+    if (selectedModels.includes(m.id)) return;
+
+    selectedModels.push(m.id);
+  });
+  localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+  renderModelList();
+  updateSelectionCount();
+}
+
+// Deselect all models from visible providers
+function deselectAllModels() {
+  // Only deselect models that are not from hidden providers
+  selectedModels = selectedModels.filter(modelId => {
+    const model = models.find(m => m.id === modelId);
+    if (!model) return false; // Remove if model no longer exists
+    if (isProviderHidden(model.provider)) return false; // Keep if provider is hidden (so it remains selected when provider is shown again)
+    return false; // Deselect all visible models
+  });
+  localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+  renderModelList();
+  updateSelectionCount();
+}
+
+// Select all models that responded successfully in the last query
+function selectSuccessfulModels() {
+  successfulModels.forEach((modelId) => {
+    // Skip if model should be hidden (quota exceeded, paid, etc.)
+    if (shouldHideModel(modelId)) return;
+    // Skip if model belongs to a hidden provider
+    const model = models.find(m => m.id === modelId);
+    if (model && isProviderHidden(model.provider)) return;
+    // Skip if model is user-hidden
+    if (isModelUserHidden(modelId)) return;
+
+    if (!selectedModels.includes(modelId)) {
+      selectedModels.push(modelId);
+    }
+  });
+  localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+  renderModelList();
+  updateSelectionCount();
+}
+
+// Toggle hidden status of a model
+function toggleModelHidden(modelId) {
+  const index = hiddenModels.indexOf(modelId);
+  if (index === -1) {
+    hiddenModels.push(modelId);
+    // Also deselect if hidden
+    const selIndex = selectedModels.indexOf(modelId);
+    if (selIndex !== -1) {
+      selectedModels.splice(selIndex, 1);
+    }
+  } else {
+    hiddenModels.splice(index, 1);
+  }
+  localStorage.setItem("hiddenModels", JSON.stringify(hiddenModels));
+  renderModelList();
+  updateSelectionCount();
+}
+
+// Toggle hidden status of a provider (hides all models from that provider)
+function toggleProviderHidden(providerName) {
+  const index = hiddenProviders.indexOf(providerName);
+  if (index === -1) {
+    hiddenProviders.push(providerName);
+    // Hide all models from this provider only for selection/sending
+    models.forEach((m) => {
+      if (m.provider === providerName && !hiddenModels.includes(m.id)) {
+        hiddenModels.push(m.id);
+      }
+    });
+    localStorage.setItem("hiddenModels", JSON.stringify(hiddenModels));
+  } else {
+    hiddenProviders.splice(index, 1);
+    // Unhide all models from this provider
+    models.forEach((m) => {
+      if (m.provider === providerName) {
+        const idx = hiddenModels.indexOf(m.id);
+        if (idx !== -1) hiddenModels.splice(idx, 1);
+      }
+    });
+    localStorage.setItem("hiddenModels", JSON.stringify(hiddenModels));
+  }
+  localStorage.setItem("hiddenProviders", JSON.stringify(hiddenProviders));
+  renderModelList();
+  updateSelectionCount();
+}
+
+// Check if a provider is hidden
+function isProviderHidden(providerName) {
+  return hiddenProviders.includes(providerName);
+}
+
+// Update selection count display
+function updateSelectionCount() {
+  const countEl = document.getElementById("selectedCount");
+  if (countEl) {
+    // Count only visible models (not hidden, not from hidden providers)
+    const visibleModels = models.filter(m => {
+      if (shouldHideModel(m.id)) return false; // Skip quota exceeded, paid
+      if (isProviderHidden(m.provider)) return false; // Skip hidden providers
+      if (isModelUserHidden(m.id)) return false; // Skip user-hidden models
+      return true;
+    });
+    countEl.textContent = `${selectedModels.length}/${visibleModels.length}`;
+  }
+}
+
+// Get status icon for a model
+function getModelStatusIcon(modelId) {
+  const status = modelStatuses[modelId];
+  if (!status) return "";
+  
+  if (status.status === "quota_exceeded") {
+    return "<span class=\"statusQuota\" title=\"Quota exceeded\">⚠️</span>";
+  }
+  if (status.status === "paid") {
+    return "<span class=\"statusPaid\" title=\"Paid model\">💰</span>";
+  }
+  if (status.status === "free") {
+    return "<span class=\"statusFree\" title=\"Free model\">✓</span>";
+  }
+  return "";
 }
 
 function renderModelList() {
@@ -493,22 +737,60 @@ function renderModelList() {
       const headerContent = document.createElement("div");
       headerContent.className = "headerContent";
 
+      const headerLeft = document.createElement("div");
+      headerLeft.className = "headerLeft";
+
       const arrow = document.createElement("span");
       arrow.className = "expandArrow";
       arrow.innerHTML = collapsedProviders[providerName] ? "▶" : "▼";
 
       const providerTitle = document.createElement("span");
+      providerTitle.className = "providerTitle";
+      providerTitle.textContent = providerName;
+
+      headerLeft.appendChild(arrow);
+      headerLeft.appendChild(providerTitle);
+
+      const headerRight = document.createElement("div");
+      headerRight.className = "headerRight";
+
+      // Status badge for inactive providers
       const statusBadge = isActive
         ? ``
-        : ` <span class="inactiveBadge">⚠ No API Key</span>`;
-      providerTitle.innerHTML = `${providerName} (${list.length})${statusBadge}`;
+        : `<span class="inactiveBadge">⚠ No API Key</span>`;
 
-      headerContent.appendChild(arrow);
-      headerContent.appendChild(providerTitle);
+      // Calculate counts for this provider
+      const providerModels = list || [];
+      const selectedCount = providerModels.filter(m => isModelSelected(m.id) && !isModelUserHidden(m.id)).length;
+      const activeCount = providerModels.filter(m => !shouldHideModel(m.id) && !isModelUserHidden(m.id)).length;
+      const totalCount = providerModels.length;
+
+      const countsSpan = document.createElement("span");
+      countsSpan.className = "providerCounts";
+      countsSpan.innerHTML = `(${selectedCount}), (${activeCount}) ${t("of")} (${totalCount})${statusBadge}`;
+
+      // Hide provider button
+      const providerHideBtn = document.createElement("button");
+      providerHideBtn.className = "providerHideBtn";
+      providerHideBtn.title = isProviderHidden(providerName) ? t("showModel") : t("hideModel");
+      providerHideBtn.innerHTML = isProviderHidden(providerName) ? "🚫" : "👁️";
+      providerHideBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleProviderHidden(providerName);
+      });
+
+      headerRight.appendChild(countsSpan);
+      headerRight.appendChild(providerHideBtn);
+
+      headerContent.appendChild(headerLeft);
+      headerContent.appendChild(headerRight);
       header.appendChild(headerContent);
 
-      // Toggle collapse on click
-      header.addEventListener("click", () => toggleProvider(providerName));
+      // Toggle collapse on click (but not on hide button)
+      header.addEventListener("click", (e) => {
+        if (e.target === providerHideBtn || providerHideBtn.contains(e.target)) return;
+        toggleProvider(providerName);
+      });
       header.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -534,10 +816,22 @@ function renderModelList() {
         list.forEach((m) => {
           const id = m.id;
           const provider = m.provider || "Unknown";
+          const isHidden = isModelUserHidden(id);
 
           const li = document.createElement("li");
-          li.className = "modelItem";
+          li.className = "modelItem" + (isHidden ? " modelItemHidden" : "");
           li.dataset.modelId = id;
+
+          // Selection checkbox
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.className = "modelCheckbox";
+          checkbox.checked = isModelSelected(id) && !isHidden;
+          checkbox.disabled = isHidden;
+          checkbox.addEventListener("change", (e) => {
+            e.stopPropagation();
+            toggleModelSelection(id);
+          });
 
           const icon = document.createElement("span");
           icon.className = "modelIcon";
@@ -547,7 +841,7 @@ function renderModelList() {
           nameContainer.className = "modelNameContainer";
 
           const name = document.createElement("span");
-          name.className = "modelName";
+          name.className = "modelName" + (isHidden ? " modelNameHidden" : "");
           name.textContent = id;
 
           const providerBadge = document.createElement("span");
@@ -555,15 +849,26 @@ function renderModelList() {
           providerBadge.textContent = provider;
 
           nameContainer.appendChild(name);
-          //   nameContainer.appendChild(providerBadge);
 
           const status = document.createElement("span");
           status.className = "modelStatus";
           status.textContent = "…";
 
+          // Hide toggle button
+          const hideBtn = document.createElement("button");
+          hideBtn.className = "hideModelBtn";
+          hideBtn.title = isHidden ? t("showModel") : t("hideModel");
+          hideBtn.innerHTML = isHidden ? "🚫" : "👁️";
+          hideBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleModelHidden(id);
+          });
+
+          li.appendChild(checkbox);
           li.appendChild(icon);
           li.appendChild(nameContainer);
           li.appendChild(status);
+          li.appendChild(hideBtn);
 
           li.onclick = () => selectModel(id);
 
@@ -583,6 +888,9 @@ function renderModelList() {
       li.textContent = "No models available";
       modelListEl.appendChild(li);
     }
+
+  // Update selection count
+  updateSelectionCount();
 }
 
 // Toggle provider collapse/expand
@@ -690,12 +998,18 @@ function selectModel(id) {
 
   const model = models.find((m) => m.id === id);
   const answer = answers[id];
+  const isHidden = hiddenModels.includes(id);
 
   selectedModelInfoEl.classList.remove("hidden");
   selectedModelAnswerEl.classList.remove("hidden");
 
   selectedModelInfoEl.innerHTML = `
-    <h2>${getModelIcon(id)} ${id}</h2>
+    <div class="modelHeader">
+      <h2>${getModelIcon(id)} ${id}</h2>
+      <button class="hideModelDetailBtn" onclick="toggleModelHidden('${id}'); selectModel('${id}');">
+        ${isHidden ? '🚫 ' + t('showModel') : '👁️ ' + t('hideModel')}
+      </button>
+    </div>
     <div class="modelDetails">
       <div><strong>${t("responseTime")}:</strong> ${formatCreated(
     model?.created
@@ -729,13 +1043,27 @@ async function askAllModels(question) {
   selectedModelInfoEl.classList.add("hidden");
   selectedModelAnswerEl.classList.add("hidden");
 
-  const tasks = models.map((m) => askSingleModel(question, m.id));
+  // Get models to query: use selectedModels if any, otherwise all visible models
+  let modelsToQuery;
+  if (selectedModels.length > 0) {
+    modelsToQuery = models.filter(m => selectedModels.includes(m.id) && !isModelUserHidden(m.id) && !shouldHideModel(m.id));
+  } else {
+    modelsToQuery = models.filter(m => !isModelUserHidden(m.id) && !shouldHideModel(m.id));
+  }
+
+  if (modelsToQuery.length === 0) {
+    typingIndicator.classList.add("hidden");
+    alert(t("noModelsSelected") || "Please select at least one model");
+    return;
+  }
+
+  const tasks = modelsToQuery.map((m) => askSingleModel(question, m.id));
   const results = await Promise.allSettled(tasks);
 
   // Log any failed promises for debugging
   results.forEach((result, index) => {
     if (result.status === "rejected") {
-      console.error(`Model ${models[index].id} failed:`, result.reason);
+      console.error(`Model ${modelsToQuery[index].id} failed:`, result.reason);
     }
   });
 
@@ -941,6 +1269,9 @@ function renderComparisonTable() {
       successfulAnswers[id] = ans;
     }
   });
+
+  // Track successful models for "Select Successful" button
+  successfulModels = Object.keys(successfulAnswers);
 
   console.debug("renderComparisonTable building tables", { successful: Object.keys(successfulAnswers).length, failed: Object.keys(failedAnswers).length });
 
@@ -1194,6 +1525,26 @@ function switchTab(tab) {
     modelsTab?.setAttribute("aria-selected", "false");
   }
 }
+
+// Reset cache button
+document.getElementById("resetCache")?.addEventListener("click", async () => {
+  await resetModelCache();
+});
+
+// Select all button
+document.getElementById("selectAllBtn")?.addEventListener("click", () => {
+  selectAllModels();
+});
+
+// Deselect all button
+document.getElementById("deselectAllBtn")?.addEventListener("click", () => {
+  deselectAllModels();
+});
+
+// Select successful models button
+document.getElementById("selectSuccessfulBtn")?.addEventListener("click", () => {
+  selectSuccessfulModels();
+});
 
 // Prevent form submission
 document.getElementById("questionArea").addEventListener("submit", (e) => {

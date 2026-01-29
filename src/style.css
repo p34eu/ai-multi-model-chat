@@ -494,8 +494,35 @@ button:hover {
 .headerContent {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.providerTitle {
+  font-weight: 600;
+}
+
+.providerCounts {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.inactiveBadge {
+  color: #f59e0b;
+  font-size: 0.85em;
 }
 
 .expandArrow {
@@ -1451,4 +1478,167 @@ table.markdown-table th {
     min-height: 44px;
     padding: 12px;
   }
+}
+
+/* Model status icons */
+.statusQuota,
+.statusPaid,
+.statusFree {
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.statusQuota {
+  color: #f59e0b;
+}
+
+.statusPaid {
+  color: #10b981;
+}
+
+.statusFree {
+  color: #3b82f6;
+}
+
+/* Success message */
+.successMessage {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #10b981;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: fadeInOut 3s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Model selection controls */
+.modelCheckbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.hideModelBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.hideModelBtn:hover {
+  opacity: 1;
+}
+
+.selectedCount {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* Model item layout with checkbox */
+.modelItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.modelItem .modelNameContainer {
+  flex: 1;
+  min-width: 0;
+}
+
+.modelItem .modelStatus {
+  margin-left: auto;
+}
+
+/* Hidden model styling */
+.modelItemHidden {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.modelNameHidden {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.modelItemHidden .modelCheckbox {
+  opacity: 0.3;
+}
+
+/* Header buttons spacing */
+.header-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-buttons .btn {
+  padding: 6px 10px;
+}
+
+/* Provider hide button */
+.providerHideBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  margin-left: 8px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.providerHideBtn:hover {
+  opacity: 1;
+}
+
+/* Model header in details section */
+.modelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modelHeader h2 {
+  margin: 0;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hideModelDetailBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.hideModelDetailBtn:hover {
+  background: var(--accent-soft);
+  color: var(--text);
 }

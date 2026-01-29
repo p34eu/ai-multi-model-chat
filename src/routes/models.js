@@ -1,6 +1,20 @@
 import express from "express";
 import fetch from "node-fetch";
 
+import {
+  initModelStatusCache,
+  getAllModelStatuses,
+  clearAllModelStatuses,
+  getModelStatus,
+  markModelQuotaExceeded,
+  markModelPaid,
+  markModelWorking,
+  isKnownFreeModel,
+} from "../modelStatus.js";
+
+// Initialize the model status cache
+initModelStatusCache();
+
 const router = express.Router();
 
 // Provider configurations
@@ -139,6 +153,74 @@ const PROVIDERS = {
       stream: true,
     }),
   },
+  deepseek: {
+    name: "DeepSeek",
+    baseUrl: "https://api.deepseek.com",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() {
+      return process.env.DEEPSEEK_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.DEEPSEEK_API_KEY;
+    },
+    modelPrefix: "deepseek-",
+    formatMessage: (message, model) => ({
+      model: model.replace("deepseek-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }],
+    }),
+  },
+  openrouter: {
+    name: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() {
+      return process.env.OPENROUTER_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.OPENROUTER_API_KEY;
+    },
+    modelPrefix: "openrouter-",
+    formatMessage: (message, model) => ({
+      model: model.replace("openrouter-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }],
+    }),
+    headers: {
+      "HTTP-Referer": process.env.APP_URL || "http://localhost",
+      "X-Title": "AI Model Comparison",
+    },
+  },
+  huggingface: {
+    name: "Hugging Face",
+    baseUrl: "https://api-inference.huggingface.co",
+    modelsUrl: "/models",
+    chatUrl: (model) => `/models/${model.replace("huggingface-", "")}`,
+    get apiKey() {
+      return process.env.HUGGINGFACE_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.HUGGINGFACE_API_KEY;
+    },
+    modelPrefix: "huggingface-",
+    formatMessage: (message, model) => ({
+      inputs: message.trim(),
+      parameters: {
+        temperature: 0.8,
+        top_p: 0.9,
+        max_new_tokens: 1024,
+      },
+    }),
+    getHeaders: (apiKey) => ({
+      Authorization: `Bearer ${apiKey}`,
+    }),
+  },
 };
 
 let cachedModels = null;
@@ -214,6 +296,13 @@ function isValidChatModel(modelId) {
     "instruct",
     "colossus",
     "aya",
+    "deepseek",
+    "openrouter",
+    "hugging",
+    "zephyr",
+    "mistral",
+    "phi",
+    "gemma",
   ];
 
   return inclusions.some((inclusion) => id.includes(inclusion));
@@ -452,6 +541,58 @@ router.get("/", async (req, res) => {
     console.error("Error fetching models:", error);
     res.status(500).json({ error: "Failed to fetch models" });
   }
+});
+
+// GET /api/models/status - Get all model statuses
+router.get("/status", (req, res) => {
+  const statuses = getAllModelStatuses();
+  res.json(statuses);
+});
+
+// POST /api/models/status - Update model status
+router.post("/status", (req, res) => {
+  const { modelId, status, action } = req.body;
+  
+  if (!modelId) {
+    return res.status(400).json({ error: "modelId is required" });
+  }
+  
+  switch (status) {
+    case "quota_exceeded":
+      markModelQuotaExceeded(modelId);
+      break;
+    case "paid":
+      markModelPaid(modelId);
+      break;
+    case "working":
+      markModelWorking(modelId);
+      break;
+    default:
+      return res.status(400).json({ error: "Invalid status" });
+  }
+  
+  res.json({ success: true, modelId, status });
+});
+
+// POST /api/models/status/reset - Reset all model statuses
+router.post("/status/reset", (req, res) => {
+  clearAllModelStatuses();
+  res.json({ success: true, message: "Model status cache cleared" });
+});
+
+// GET /api/models/check/:modelId - Check status of a specific model
+router.get("/check/:modelId", (req, res) => {
+  const { modelId } = req.params;
+  const status = getModelStatus(modelId);
+  
+  // Also check if it's a known free model
+  const isFree = isKnownFreeModel(modelId);
+  
+  res.json({
+    modelId,
+    ...status,
+    isKnownFree: isFree,
+  });
 });
 
 export default router;

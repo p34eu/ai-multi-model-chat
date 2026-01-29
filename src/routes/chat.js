@@ -1,6 +1,11 @@
 import express from "express";
 import fetch from "node-fetch";
 
+import {
+  markModelQuotaExceeded,
+  markModelWorking,
+} from "../modelStatus.js";
+
 const router = express.Router();
 
 // Provider configurations (same as in models.js)
@@ -134,6 +139,74 @@ const PROVIDERS = {
       stream: true,
     }),
   },
+  deepseek: {
+    name: "DeepSeek",
+    baseUrl: "https://api.deepseek.com",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() {
+      return process.env.DEEPSEEK_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.DEEPSEEK_API_KEY;
+    },
+    modelPrefix: "deepseek-",
+    formatMessage: (message, model) => ({
+      model: model.replace("deepseek-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }],
+    }),
+  },
+  openrouter: {
+    name: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    modelsUrl: "/models",
+    chatUrl: "/chat/completions",
+    get apiKey() {
+      return process.env.OPENROUTER_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.OPENROUTER_API_KEY;
+    },
+    modelPrefix: "openrouter-",
+    formatMessage: (message, model) => ({
+      model: model.replace("openrouter-", ""),
+      stream: true,
+      temperature: 0.8,
+      top_p: 0.9,
+      messages: [{ role: "user", content: message.trim() }],
+    }),
+    headers: {
+      "HTTP-Referer": process.env.APP_URL || "http://localhost",
+      "X-Title": "AI Model Comparison",
+    },
+  },
+  huggingface: {
+    name: "Hugging Face",
+    baseUrl: "https://api-inference.huggingface.co",
+    modelsUrl: "/models",
+    chatUrl: (model) => `/models/${model.replace("huggingface-", "")}`,
+    get apiKey() {
+      return process.env.HUGGINGFACE_API_KEY;
+    },
+    get enabled() {
+      return !!process.env.HUGGINGFACE_API_KEY;
+    },
+    modelPrefix: "huggingface-",
+    formatMessage: (message, model) => ({
+      inputs: message.trim(),
+      parameters: {
+        temperature: 0.8,
+        top_p: 0.9,
+        max_new_tokens: 1024,
+      },
+    }),
+    getHeaders: (apiKey) => ({
+      Authorization: `Bearer ${apiKey}`,
+    }),
+  },
 };
 
 // Helper function to determine provider from model ID
@@ -251,6 +324,31 @@ function handleStreamingResponse(provider, response, res) {
         }
       }
     });
+  } else if (provider.name === "Hugging Face") {
+    // Hugging Face streaming format
+    response.body.on("data", (chunk) => {
+      buffer += chunk.toString();
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        
+        // Hugging Face returns data without data: prefix
+        try {
+          const json = JSON.parse(line);
+          if (json.token && json.token.text) {
+            res.write(`data: ${JSON.stringify({ token: json.token.text })}\n\n`);
+          } else if (json.generated_text) {
+            res.write("data: [DONE]\n\n");
+            return res.end();
+          }
+        } catch (e) {
+          // Skip non-JSON lines
+          continue;
+        }
+      }
+    });
   } else {
     response.body.on("data", (chunk) => {
       buffer += chunk.toString();
@@ -359,6 +457,18 @@ router.post("/", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`${provider.name} API error:`, response.status, errorText);
+      
+      // Check for quota exceeded errors (429) or insufficient quota errors
+      const isQuotaError = response.status === 429 || 
+        errorText.toLowerCase().includes("quota") ||
+        errorText.toLowerCase().includes("insufficient") ||
+        errorText.toLowerCase().includes("rate limit");
+      
+      if (isQuotaError) {
+        markModelQuotaExceeded(model);
+        console.log(`Marked model ${model} as quota exceeded`);
+      }
+      
       let errorDetails = `${provider.name} API request failed (Status: ${response.status})`;
       try {
         const errorJson = JSON.parse(errorText);
@@ -377,6 +487,9 @@ router.post("/", async (req, res) => {
       return res.end();
     }
 
+    // Mark model as working on successful response
+    markModelWorking(model);
+    
     handleStreamingResponse(provider, response, res);
   } catch (err) {
     console.error("Chat error:", err);
