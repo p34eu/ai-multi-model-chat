@@ -82,18 +82,20 @@ body {
 #app {
   width: 100%;
   margin: 0 auto;
-  height: 100vh;
-  display: grid;
-  grid-template-rows: var(--topbar-height) 1fr auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Top bar */
 
 #topBar {
   display: flex;
-  align-items: center;
-  padding: 12px 18px;
-  height: var(--topbar-height);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 14px;
+  min-height: var(--topbar-height);
   background: linear-gradient(to right, #020617, #0f172a);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -103,9 +105,10 @@ body {
 #headerContent {
   display: flex;
   align-items: center;
-  gap: 30px;
+  gap: 12px;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-between;
+  width: 100%;
 }
 #title {
   font-weight: 200;
@@ -263,16 +266,12 @@ button:hover {
 /* Layout */
 
 #mainArea {
-  display: grid;
-  grid-template-columns: 300px 1fr;
-  height: calc(100vh - var(--topbar-height));
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  flex: 1 1 auto;
   overflow: hidden;
-  transition: grid-template-columns 0.3s ease;
-}
-
-#mainArea:has(#sidePanel.collapsed) {
-  grid-template-columns: 1fr;
+  position: relative;
 }
 
 /* Side panel */
@@ -284,9 +283,16 @@ button:hover {
   display: flex;
   flex-direction: column;
   overflow: auto;
-  width: 300px;
-  min-width: 300px;
+  width: min(86vw, 320px);
+  max-width: 360px;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  transform: translateX(-100%);
   transition: transform 0.3s ease, opacity 0.3s ease;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.5);
 }
 
 /* Tab Navigation */
@@ -363,9 +369,13 @@ button:hover {
   display: flex;
 }
 
-/* Desktop collapsed state */
+/* Drawer collapsed state */
 #sidePanel.collapsed {
-  display: none;
+  transform: translateX(-100%);
+}
+
+#sidePanel:not(.collapsed) {
+  transform: translateX(0);
 }
 
 /* Sidebar backdrop for mobile */
@@ -534,7 +544,7 @@ button:hover {
 
 .providerModels {
   margin-top: 4px;
-  margin-left: -40px;;
+  margin-left: 0;
   transition: all 0.2s ease-in-out;
 }
 
@@ -709,18 +719,17 @@ button:hover {
 
 #questionArea {
   display: flex;
-  gap: 10px;
-  /* Keep the question area aligned to the right of the header */
-  margin-left: auto;
-  width: 50%;
-  align-items: center;
+  gap: 8px;
+  margin-left: 0;
+  width: 100%;
+  align-items: stretch;
+  flex-direction: column;
 }
 
 #message {
   flex: 1;
-  padding: 10px 12px;
-  font-size: 15px;
-  /* Slightly rounded rectangle for textarea */
+  padding: 12px 12px;
+  font-size: 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: #020617;
@@ -834,15 +843,101 @@ button:hover {
   padding-top: var(--table-header-height, 0px);
 }
 
+.resultsCards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultCard {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cardTitle .providerName {
+  color: var(--text);
+}
+
+.cardTitle .modelName {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.cardMeta {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cardBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.cardText {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.cardAnswer {
+  background: #020617;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  overflow: auto;
+}
+
 /* Sticky header for comparison table: keeps title, question and clear button visible while scrolling */
 #resultsHeader {
-  position: sticky;
-  top: var(--topbar-height);
-  z-index: 60;
+  position: relative;
+  top: auto;
+  z-index: 40;
   display: block;
-  background-color: #020617;
-  box-shadow: 0 6px 10px rgba(0,0,0,0.4);
-  padding: 12px 16px 6px 16px;
+  background-color: transparent;
+  box-shadow: none;
+  padding: 6px 0;
 }
 
 /* Keep the old #tableHeader styles but non-sticky (used as wrapper inside resultsHeader if present) */
@@ -1109,13 +1204,9 @@ table.compare tr:nth-child(even) td:first-child {
   padding: 16px;
 }
 
-.failed-table {
-  border: 1px solid #dc3545;
-}
-
-.failed-table th {
-  background: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
+.failed-cards .resultCard {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.08);
 }
 
 table.markdown-table {
@@ -1170,17 +1261,17 @@ table.markdown-table th {
 }
 
 /* Markdown styling */
-.answer-cell strong {
+.cardAnswer strong {
   font-weight: bold;
   color: var(--accent);
 }
 
-.answer-cell em {
+.cardAnswer em {
   font-style: italic;
   color: #fbbf24;
 }
 
-.answer-cell code {
+.cardAnswer code {
   background: rgba(59, 130, 246, 0.1);
   padding: 2px 4px;
   border-radius: 3px;
@@ -1189,7 +1280,7 @@ table.markdown-table th {
   color: #93c5fd;
 }
 
-.answer-cell pre {
+.cardAnswer pre {
   background: var(--bg-alt);
   padding: 10px;
   border-radius: 5px;
@@ -1198,146 +1289,35 @@ table.markdown-table th {
   margin: 10px 0;
 }
 
-.answer-cell pre code {
+.cardAnswer pre code {
   background: none;
   padding: 0;
   color: var(--text);
 }
 
-.answer-cell h1,
-.answer-cell h2,
-.answer-cell h3 {
+.cardAnswer h1,
+.cardAnswer h2,
+.cardAnswer h3 {
   color: var(--accent);
   margin-top: 15px;
   margin-bottom: 5px;
 }
 
-.answer-cell h1 {
+.cardAnswer h1 {
   font-size: 1.5em;
 }
-.answer-cell h2 {
+.cardAnswer h2 {
   font-size: 1.3em;
 }
-.answer-cell h3 {
+.cardAnswer h3 {
   font-size: 1.1em;
 }
 
-/* Mobile */
-
-/* Mobile styles */
+/* Mobile-first enhancements for smaller screens */
 @media (max-width: 768px) {
   #topBar {
-    flex-direction: column;
-    align-items: stretch;
+    padding: 10px 12px;
   }
-
-  /* Let the top bar grow on mobile and push content down instead of overlapping it */
-  #app {
-    grid-template-rows: auto 1fr auto;
-    height: 100vh;
-  }
-
-  #mainArea {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr;
-    position: relative;
-    height: auto;
-  }
-
-  #sidePanel {
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 80%;
-    max-width: 300px;
-    z-index: 100;
-    border-right: 1px solid var(--border);
-    border-bottom: none;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
-  }
-
-  /* Offscreen when collapsed on mobile */
-  #sidePanel.collapsed {
-    transform: translateX(-100%);
-    display: flex;
-  }
-
-  #questionArea {
-    width: 100%;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  /* Fix tab content and provider list layout inside the mobile drawer */
-  #sidePanel {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .tab-content {
-    width: 100%;
-    padding: 12px 12px 20px 12px;
-    box-sizing: border-box;
-    /* Take remaining vertical space so content isn't vertically centered */
-    flex: 1 1 auto;
-    overflow: auto;
-    min-height: 0; /* allow flex children to shrink properly */
-  }
-
-  /* Remove the negative left margin that was shifting provider lists */
-  .providerModels {
-    margin-left: 0;
-    padding-left: 0;
-  }
-
-  /* Ensure list items use full width */
-  #modelList li,
-  #historyList li,
-  .modelItem {
-    width: 100%;
-    box-sizing: border-box;
-    padding-left: 8px;
-  }
-
-  /* Ensure tab panels and lists stretch to the full drawer width and are not centered */
-  .tab-panel {
-    width: 100%;
-    align-self: stretch;
-    box-sizing: border-box;
-    padding: 0;
-    flex: 1 1 auto;
-    overflow: auto;
-   
-  }
-
-  #modelList,
-  #historyList,
-  .providerModels,
-  .providerGroup {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  .modelItem {
-    justify-content: flex-start;
-    padding-right: 12px;
-  }
-
-  #message {
-    width: 100%;
-    font-size: 16px; /* Prevent zoom on iOS */
-  }
-
-  #sendBtn {
-    width: 100%;
-    padding: 12px;
-  }
-
-  
 
   #comparisonTable {
     overflow-x: auto;
@@ -1358,15 +1338,69 @@ table.markdown-table th {
     z-index: 1000;
     border: 1px solid var(--border);
   }
+}
 
-  /* On narrow screens, disable sticky results header so it won't overlap an expanded topBar */
-  #resultsHeader {
+/* Desktop layout */
+@media (min-width: 900px) {
+  #topBar {
+    flex-direction: row;
+    align-items: center;
+    height: var(--topbar-height);
+    padding: 12px 18px;
+  }
+
+  #questionArea {
+    width: 50%;
+    margin-left: auto;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
+  }
+
+  #mainArea {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - var(--topbar-height));
+    min-height: 0;
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  #mainArea:has(#sidePanel.collapsed) {
+    grid-template-columns: 1fr;
+  }
+
+  #sidePanel {
     position: relative;
-    top: auto;
-    z-index: 40;
+    transform: none;
+    width: 320px;
+    min-width: 320px;
+    max-width: 320px;
     box-shadow: none;
-    background-color: transparent;
-    padding: 0 0 6px 0;
+  }
+
+  #sidePanel.collapsed {
+    display: none;
+  }
+
+  #sidePanel:not(.collapsed) {
+    transform: none;
+  }
+
+  .sidebar-backdrop {
+    display: none;
+  }
+
+  .providerModels {
+    margin-left: -40px;
+  }
+
+  #resultsHeader {
+    position: sticky;
+    top: var(--topbar-height);
+    z-index: 60;
+    background-color: #020617;
+    box-shadow: 0 6px 10px rgba(0,0,0,0.4);
+    padding: 12px 16px 6px 16px;
   }
 }
 

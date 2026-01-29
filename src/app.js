@@ -7,8 +7,7 @@ let lastQuestion = "";
 let selectedModel = null;
 let history = JSON.parse(localStorage.getItem("chatHistory")) || []; // [{ question, answersSnapshot }]
 let currentLanguage = localStorage.getItem("language") || "bg"; // 'bg' or 'en'
-let collapsedProviders =
-  JSON.parse(localStorage.getItem("collapsedProviders")) || {}; // provider -> boolean
+let collapsedProviders = JSON.parse(localStorage.getItem("collapsedProviders")) || {}; // provider -> boolean
 let providerStatus = {}; // provider status from backend
 let modelStatuses = {}; // modelId -> { status, timestamp }
 let selectedModels = JSON.parse(localStorage.getItem("selectedModels")) || []; // array of model IDs to send to
@@ -179,18 +178,10 @@ function applyTranslations() {
     typingText.textContent = t("typing");
   }
 
-  // Update comparison table if exists
+  // Update comparison title if exists
   const comparisonTitle = document.querySelector("#comparisonTable h3");
   if (comparisonTitle) {
     comparisonTitle.textContent = t("comparisonTitle");
-  }
-
-  // Update table headers
-  const tableHeaders = document.querySelectorAll(".compare th");
-  if (tableHeaders.length >= 3) {
-    tableHeaders[0].textContent = t("model");
-    tableHeaders[1].textContent = t("time");
-    tableHeaders[2].textContent = t("answer");
   }
 
   // Update selected model info
@@ -1295,7 +1286,7 @@ function renderComparisonTable() {
     `;
   }
 
-  // Render successful answers table
+  // Render successful answers cards
   if (Object.keys(successfulAnswers).length > 0) {
     const table = createComparisonTable(successfulAnswers);
     comparisonTableEl.appendChild(table);
@@ -1318,7 +1309,7 @@ function renderComparisonTable() {
     failedContent.className = "failed-content";
 
     const failedTable = createComparisonTable(failedAnswers);
-    failedTable.classList.add("failed-table");
+    failedTable.classList.add("failed-cards");
     failedContent.appendChild(failedTable);
 
     failedSection.appendChild(toggleBtn);
@@ -1345,52 +1336,58 @@ function renderComparisonTable() {
 
 function createComparisonTable(answerSet) {
   const wrapper = document.createElement("div");
-  wrapper.className = "table-wrapper";
-
-  const table = document.createElement("table");
-  table.className = "compare";
-
-  const headerRow = document.createElement("tr");
-  [t("model"), t("time"), t("answer")].forEach((header) => {
-    const th = document.createElement("th");
-    th.textContent = header;
-    headerRow.appendChild(th);
-  });
-  table.appendChild(headerRow);
+  wrapper.className = "resultsCards";
 
   Object.keys(answerSet).forEach((id) => {
     const ans = answerSet[id];
-    const row = document.createElement("tr");
+    const card = document.createElement("article");
+    card.className = "resultCard";
 
-    // Model cell
-    const modelCell = document.createElement("td");
-    modelCell.setAttribute("data-label", t("model"));
-    modelCell.innerHTML = `${getModelIcon(id)} ${id}`;
-    row.appendChild(modelCell);
+    const model = models.find((m) => m.id === id);
+    const providerName = model?.provider || "Unknown";
 
-    // Time cell
-    const timeCell = document.createElement("td");
-    timeCell.setAttribute("data-label", t("time"));
-    timeCell.textContent = `${ans.time} ms`;
-    row.appendChild(timeCell);
+    const header = document.createElement("div");
+    header.className = "cardHeader";
 
-    // Answer cell
-    const answerCell = document.createElement("td");
-    answerCell.className = "answer-cell";
-    answerCell.setAttribute("data-label", t("answer"));
+    const title = document.createElement("div");
+    title.className = "cardTitle";
+    title.innerHTML = `${getModelIcon(id)} <span class="providerName">${providerName}</span> · <span class="modelName">${id}</span>`;
 
+    const meta = document.createElement("div");
+    meta.className = "cardMeta";
+    meta.textContent = `${ans.time} ms`;
+
+    header.appendChild(title);
+    header.appendChild(meta);
+
+    const body = document.createElement("div");
+    body.className = "cardBody";
+
+    const questionBlock = document.createElement("div");
+    questionBlock.className = "cardBlock";
+    questionBlock.innerHTML = `<div class="cardLabel">${t("question")}</div><div class="cardText">${lastQuestion}</div>`;
+
+    const answerBlock = document.createElement("div");
+    answerBlock.className = "cardBlock";
     const tableElement = parseMarkdownTable(ans.text);
+    const answerContent = document.createElement("div");
+    answerContent.className = "cardAnswer";
     if (tableElement) {
-      answerCell.appendChild(tableElement);
+      answerContent.appendChild(tableElement);
     } else {
-      answerCell.innerHTML = parseMarkdown(ans.text);
+      answerContent.innerHTML = parseMarkdown(ans.text);
     }
+    answerBlock.innerHTML = `<div class="cardLabel">${t("answer")}</div>`;
+    answerBlock.appendChild(answerContent);
 
-    row.appendChild(answerCell);
-    table.appendChild(row);
+    body.appendChild(questionBlock);
+    body.appendChild(answerBlock);
+
+    card.appendChild(header);
+    card.appendChild(body);
+    wrapper.appendChild(card);
   });
 
-  wrapper.appendChild(table);
   return wrapper;
 }
 
