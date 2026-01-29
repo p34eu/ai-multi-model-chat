@@ -13,15 +13,15 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 ![AI Model Comparison Tool - Main Interface](.github/screenshots/main-interface.png)
 
-*Compare responses from 95+ AI models across multiple providers in real-time, with performance metrics and smart filtering.*
+*Compare responses from 280+ AI models across multiple providers in real-time, with performance metrics and smart filtering.*
 
 ## 🚀 Features
 
-- **Multi-Provider Support**: Compare models from Groq, OpenAI, Anthropic, Google AI, Mistral, and Cohere
+- **Multi-Provider Support**: Compare models from Anthropic, OpenAI, Google AI, Groq, Mistral, Cohere, DeepSeek, OpenRouter, Hugging Face
 - **Smart Model Filtering**: Automatically filters out non-chat models (embeddings, audio, vision-only, etc.) to show only chat-capable models
 - **Provider Status Indicators**: Visual indicators showing active providers (with API keys) and inactive providers (with setup instructions)
 - **Collapsible Provider Groups**: Organize and manage models by provider with expand/collapse functionality and state persistence
-- **Multiple AI Models**: Support for 64+ chat-capable models (Llama, Gemma, Qwen, Mixtral, GPT, Claude, Gemini, Mistral, Cohere, etc.)
+- **Multiple AI Models**: Support for 280+ chat-capable models from various providers
 - **Real-time Comparison**: Simultaneous querying of all models with streaming responses
 - **Performance Comparison**: Response time tracking and speed indicators
 - **Query History**: Saving and reviewing previous questions
@@ -81,7 +81,7 @@ An intelligent tool for comparing responses from multiple AI models in real-time
 
 - **Backend**: Node.js v20+, Express.js
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
-- **AI Integration**: Multi-provider support (Groq, OpenAI, Anthropic, Google AI, Mistral, Cohere) with dynamic API key loading
+- **AI Integration**: Multi-provider support (Groq, OpenAI, Anthropic, Google AI, Mistral, Cohere, DeepSeek, OpenRouter, Hugging Face) with dynamic API key loading
 - **Model Filtering**: Intelligent filtering system to show only chat-capable models
 - **Authentication**: Provider-specific auth methods (Bearer tokens, custom headers, query parameters)
 - **Images**: Sharp for favicon generation
@@ -149,6 +149,15 @@ MISTRAL_API_KEY=your_mistral_api_key_here
 # Cohere - Optional
 COHERE_API_KEY=your_cohere_api_key_here
 
+# DeepSeek - Optional
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+
+# OpenRouter - Optional
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+
+# Hugging Face - Optional
+HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+
 # Application URL (for social sharing meta tags)
 VITE_APP_URL=https://your-domain.com
 ```
@@ -193,18 +202,19 @@ npm run build:start
 npm test
 ```
 
-## � CI/CD
+##  CI/CD
 
 This project uses GitHub Actions for continuous integration and deployment:
 
 - **CI Pipeline**: Automated testing on multiple Node.js versions
 - **CodeQL**: Security vulnerability scanning
-- **Dependency Review**: Automated dependency security checks- **Performance Monitoring**: Lighthouse performance, accessibility, and SEO checks- **Release Automation**: Automated releases on version tags
+- **Dependency Review**: Automated dependency security checks
+- **Performance Monitoring**: Lighthouse performance, accessibility, and SEO checks
+- **Release Automation**: Automated releases on version tags   
 - **Stale Management**: Automatic cleanup of inactive issues/PRs
 - **Dependabot**: Automated dependency updates
 
-## �📁 Project Structure
-
+##  Project Structure
 ```
 ├── public/           # Frontend files
 │   ├── index.html    # Main page with provider grouping UI
@@ -242,7 +252,7 @@ pm2 start app.yml
 pm2 list
 
 # Restart services
-pm2 restart all
+pm2 restart {id|name}
 ```
 
 ### Environment Variables
@@ -274,6 +284,9 @@ The application automatically filters and displays only chat-capable models from
 - **Google AI**: 8 models (Gemini variants)
 - **Mistral**: 9 models (inactive - requires API key)
 - **Cohere**: 9 models
+- **DeepSeek**: deepseek-chat
+- **OpenRouter**: Multiple models including Claude, Gemini, Llama, Mistral
+- **Hugging Face**: Multiple models including Mistral, Zephyr, Phi-3
 
 ## 🤝 Contributing
 
