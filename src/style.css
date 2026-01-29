@@ -834,6 +834,13 @@ button:hover {
   gap: 12px;
 }
 
+.resultsCounts {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-left: 12px;
+  white-space: nowrap;
+}
+
 .questionTitle {
   background: transparent;
   padding: 4px 0;

@@ -50,6 +50,7 @@ const translations = {
     answer: "Отговор",
     clearResults: "Изчисти резултатите",
     failedResponses: "Неуспешни отговори",
+    successfulResponses: "Успешни отговори",
     language: "Език",
     english: "English",
     bulgarian: "Български",
@@ -79,6 +80,7 @@ const translations = {
     answer: "Answer",
     clearResults: "Clear Results",
     failedResponses: "Failed Responses",
+    successfulResponses: "Successful Responses",
     language: "Language",
     english: "English",
     bulgarian: "Български",
@@ -99,6 +101,23 @@ function updateLanguage(lang) {
   currentLanguage = lang;
   localStorage.setItem("language", lang);
   applyTranslations();
+  // Re-render dynamic UI that depends on translations
+  try {
+    renderModelList();
+  } catch (e) {}
+  try {
+    renderHistory();
+  } catch (e) {}
+  try {
+    renderComparisonTable();
+  } catch (e) {}
+
+  // Re-render selected model panel if open
+  if (selectedModel) {
+    try {
+      selectModel(selectedModel);
+    } catch (e) {}
+  }
 }
 
 /**
@@ -928,9 +947,13 @@ function renderComparisonTable() {
   // Render header into the dedicated resultsHeader container (outside the scrollable table)
   const resultsHeaderEl = document.getElementById("resultsHeader");
   if (resultsHeaderEl) {
+    const successCount = Object.keys(successfulAnswers).length;
+    const failedCount = Object.keys(failedAnswers).length;
     resultsHeaderEl.innerHTML = `
       <div id="tableHeader">
-        <div id="tableTitle"><h3>${t("comparisonTitle")}</h3>
+        <div id="tableTitle">
+          <h3>${t("comparisonTitle")}</h3>
+          <div class="resultsCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
           <button id="clearResultsBtn" class="clear-btn">${t("clearResults")}</button>
         </div>
         <div class="questionTitle"><strong>${t("question")}:</strong> ${lastQuestion}</div>
