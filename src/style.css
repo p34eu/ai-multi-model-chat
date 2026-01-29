@@ -103,17 +103,24 @@ body {
   z-index: 50;
 }
 #headerContent {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 12px;
-  flex-direction: row;
-  justify-content: space-between;
   width: 100%;
 }
+
+.headerButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 #title {
   font-weight: 200;
   letter-spacing: 0.04em;
   color: var(--text);
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -206,6 +213,23 @@ button:hover {
 .toggle-btn.active span:nth-child(3) {
   transform: translateY(0) rotate(-45deg);
 }
+
+/* Results panel toggle button - uses emoji instead of hamburger bars */
+#toggleResultsPanelBtn2 {
+  margin-left: 8px;
+  font-size: 18px;
+}
+
+#toggleResultsPanelBtn2 span {
+  display: none; /* Hide hamburger bars since we use emoji */
+}
+
+#toggleResultsPanelBtn2.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
 .github-badge {
   display: flex;
   align-items: center;
@@ -293,6 +317,136 @@ button:hover {
   transform: translateX(-100%);
   transition: transform 0.3s ease, opacity 0.3s ease;
   box-shadow: 2px 0 12px rgba(0, 0, 0, 0.5);
+}
+
+#resultsPanel {
+  background: rgba(15, 23, 42, 0.9);
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: auto;
+}
+
+.resultsPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.resultsPanelHeader h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.resultsPanelActions {
+  display: flex;
+  gap: 6px;
+}
+
+#resultsPanelContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resultsPanelStats {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.resultsPanelCounts {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: inline-block;
+}
+
+.resultsPanelQuestion {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: #020617;
+}
+
+.resultsPanelLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.resultsPanelText {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.resultsPanelModelList {
+  margin-top: 16px;
+  max-height: calc(100vh - 420px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.resultsPanelModelList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.resultsPanelModelList::-webkit-scrollbar-track {
+  background: var(--panel);
+  border-radius: 3px;
+}
+
+.resultsPanelModelList::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+.resultsPanelModelList::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+.modelListItem {
+  padding: 8px 12px;
+  margin: 2px 0;
+  background: var(--panel-alt);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid transparent;
+}
+
+.modelListItem:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  transform: translateX(2px);
+}
+
+.modelListItem .modelIcon {
+  flex-shrink: 0;
+}
+
+.modelListItem .modelName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modelListItem .modelTime {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* Tab Navigation */
@@ -829,8 +983,8 @@ button:hover {
 /* Comparison table */
 #tableTitle{
   display: flex;
-  margin-top:12px;
-  margin-right: 12px;
+  margin-top: 0;
+  margin-right: 0;
   justify-content: space-between;
   align-items: center;
 }
@@ -855,6 +1009,30 @@ button:hover {
   border-radius: 12px;
   padding: 12px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.3s, transform 0.3s, outline 0.3s, background 0.3s;
+}
+
+.resultCard.highlighted {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.15), rgba(15, 23, 42, 0.9));
+  animation: cardPulse 2.5s ease-out;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes cardPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+  }
+  25% {
+    transform: scale(1.02);
+    box-shadow: 0 16px 40px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    transform: scale(1);
+    box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+  }
 }
 
 .cardHeader {
@@ -931,13 +1109,7 @@ button:hover {
 
 /* Sticky header for comparison table: keeps title, question and clear button visible while scrolling */
 #resultsHeader {
-  position: relative;
-  top: auto;
-  z-index: 40;
-  display: block;
-  background-color: transparent;
-  box-shadow: none;
-  padding: 6px 0;
+  display: none;
 }
 
 /* Keep the old #tableHeader styles but non-sticky (used as wrapper inside resultsHeader if present) */
@@ -945,7 +1117,7 @@ button:hover {
   position: static;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   padding: 0;
 }
 
@@ -953,13 +1125,13 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
 }
 
 .resultsCounts {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-left: 12px;
+  margin-left: 8px;
   white-space: nowrap;
 }
 
@@ -969,14 +1141,14 @@ button:hover {
 }
 
 #comparisonTable h3 {
-  margin: 4px 0 6px;
-  font-size: 14px;
+  margin: 0;
+  font-size: 13px;
 }
 
 .questionTitle {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin-bottom: 2px;
 }
 
 table.compare {
@@ -1369,6 +1541,14 @@ table.markdown-table th {
     grid-template-columns: 1fr;
   }
 
+  #mainArea:has(#resultsPanel:not(.hidden)) {
+    grid-template-columns: 320px 260px 1fr;
+  }
+
+  #mainArea:has(#sidePanel.collapsed):has(#resultsPanel:not(.hidden)) {
+    grid-template-columns: 260px 1fr;
+  }
+
   #sidePanel {
     position: relative;
     transform: none;
@@ -1376,6 +1556,14 @@ table.markdown-table th {
     min-width: 320px;
     max-width: 320px;
     box-shadow: none;
+  }
+
+  #resultsPanel {
+    position: relative;
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    height: 100%;
   }
 
   #sidePanel.collapsed {
@@ -1395,12 +1583,7 @@ table.markdown-table th {
   }
 
   #resultsHeader {
-    position: sticky;
-    top: var(--topbar-height);
-    z-index: 60;
-    background-color: #020617;
-    box-shadow: 0 6px 10px rgba(0,0,0,0.4);
-    padding: 12px 16px 6px 16px;
+    display: none;
   }
 }
 

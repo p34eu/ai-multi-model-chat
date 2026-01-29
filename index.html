@@ -64,12 +64,18 @@
   <div id="app">
     <header id="topBar">
       <div id="headerContent">
-        <button id="toggleSidebarBtn" class="toggle-btn" aria-label="Toggle sidebar">
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+        <div class="headerButtons">
+          <button id="toggleSidebarBtn" class="toggle-btn" aria-label="Toggle sidebar">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <button id="toggleResultsPanelBtn2" class="toggle-btn hidden" aria-label="Toggle results panel">
+            📊
+          </button>
+        </div>
         <h1 id="title" data-i18n="appTitle">AI Model Comparison Tool</h1>
+        <div></div>
       </div>
       <form id="questionArea" role="search" aria-label="AI model comparison query">
         <label for="message" class="sr-only">Enter your question for AI models</label>
@@ -175,6 +181,19 @@
             <ul id="historyList" aria-label="Previous queries"></ul>
           </section>
         </div>
+      </aside>
+
+      <aside id="resultsPanel" class="hidden" aria-label="Results summary">
+        <div class="resultsPanelHeader">
+          <h3 id="resultsPanelTitle">Получени резултати</h3>
+          <div class="resultsPanelActions">
+            <button id="clearResultsBtn" class="clear-btn">Изчисти резултатите</button>
+            <button id="toggleResultsPanelBtn" class="btn" aria-label="Hide results panel" title="Hide results panel">
+              ✕
+            </button>
+          </div>
+        </div>
+        <div id="resultsPanelContent"></div>
       </aside>
 
       <section id="chatSection" aria-label="AI model responses and comparison">

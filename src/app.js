@@ -183,6 +183,12 @@ function applyTranslations() {
   if (comparisonTitle) {
     comparisonTitle.textContent = t("comparisonTitle");
   }
+  if (resultsPanelTitleEl) {
+    resultsPanelTitleEl.textContent = t("comparisonTitle");
+  }
+  if (clearResultsBtnEl) {
+    clearResultsBtnEl.textContent = t("clearResults");
+  }
 
   // Update selected model info
   const selectedModelInfo = document.querySelector("#selectedModelInfo h2");
@@ -239,6 +245,11 @@ const typingIndicator = document.getElementById("typingIndicator");
 const selectedModelInfoEl = document.getElementById("selectedModelInfo");
 const selectedModelAnswerEl = document.getElementById("selectedModelAnswer");
 const comparisonTableEl = document.getElementById("comparisonTable");
+const resultsPanelEl = document.getElementById("resultsPanel");
+const resultsPanelContentEl = document.getElementById("resultsPanelContent");
+const resultsPanelTitleEl = document.getElementById("resultsPanelTitle");
+const clearResultsBtnEl = document.getElementById("clearResultsBtn");
+const toggleResultsPanelBtn = document.getElementById("toggleResultsPanelBtn");
 
 // ===============================
 // HELPERS
@@ -1241,6 +1252,8 @@ function renderComparisonTable() {
     // also clear the external results header so question disappears
     const resultsHeaderEl = document.getElementById("resultsHeader");
     if (resultsHeaderEl) resultsHeaderEl.innerHTML = "";
+    if (resultsPanelContentEl) resultsPanelContentEl.innerHTML = "";
+    if (resultsPanelEl) resultsPanelEl.classList.add("hidden");
     if (isMobile()) {
       setMobileControlsVisible(false);
     }
@@ -1272,18 +1285,59 @@ function renderComparisonTable() {
   // Render header into the dedicated resultsHeader container (outside the scrollable table)
   const resultsHeaderEl = document.getElementById("resultsHeader");
   if (resultsHeaderEl) {
+    resultsHeaderEl.innerHTML = "";
+  }
+
+  if (resultsPanelContentEl) {
     const successCount = Object.keys(successfulAnswers).length;
     const failedCount = Object.keys(failedAnswers).length;
-    resultsHeaderEl.innerHTML = `
-      <div id="tableHeader">
-        <div id="tableTitle">
-          <h3>${t("comparisonTitle")}</h3>
-          <div class="resultsCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
-          <button id="clearResultsBtn" class="clear-btn">${t("clearResults")}</button>
+    
+    // Build model list with click handlers
+    let modelListHtml = '';
+    Object.keys(successfulAnswers).forEach((id) => {
+      const ans = successfulAnswers[id];
+      const speedClass = getSpeedClass(ans.time);
+      modelListHtml += `
+        <div class="modelListItem" data-model-id="${id}">
+          ${getModelIcon(id)}
+          <span class="modelName">${id}</span>
+          <span class="modelTime ${speedClass}">${ans.time}ms</span>
         </div>
-        <div class="questionTitle"><strong>${t("question")}:</strong> ${lastQuestion}</div>
+      `;
+    });
+    
+    resultsPanelContentEl.innerHTML = `
+      <div class="resultsPanelStats">
+        <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
+      </div>
+      <div class="resultsPanelQuestion">
+        <div class="resultsPanelLabel">${t("question")}</div>
+        <div class="resultsPanelText">${lastQuestion}</div>
+      </div>
+      <div class="resultsPanelModelList">
+        <div class="resultsPanelLabel">${t("models")}</div>
+        ${modelListHtml}
       </div>
     `;
+    
+    // Add click handlers to model list items
+    resultsPanelContentEl.querySelectorAll('.modelListItem').forEach((item) => {
+      item.addEventListener('click', () => {
+        const modelId = item.dataset.modelId;
+        scrollToModelCard(modelId);
+      });
+    });
+  }
+
+  if (resultsPanelEl) {
+    resultsPanelEl.classList.remove("hidden");
+  }
+  
+  // Show results panel toggle button
+  const toggleBtn2 = document.getElementById("toggleResultsPanelBtn2");
+  if (toggleBtn2) {
+    toggleBtn2.classList.remove("hidden");
+    toggleBtn2.classList.add("active");
   }
 
   // Render successful answers cards
@@ -1324,13 +1378,32 @@ function renderComparisonTable() {
     });
   }
 
-  // Add event listener to clear button
-  const clearBtn = document.getElementById("clearResultsBtn");
-  if (clearBtn) clearBtn.addEventListener("click", clearResults);
-
   // No dynamic measurement needed: header is outside the scroll container and sticks under the top bar.
   if (isMobile()) {
     setMobileControlsVisible(true);
+  }
+}
+
+// Scroll to a specific model card
+function scrollToModelCard(modelId) {
+  const cards = comparisonTableEl.querySelectorAll('.resultCard');
+  for (const card of cards) {
+    const modelName = card.querySelector('.modelName');
+    if (modelName && modelName.textContent === modelId) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Remove any existing highlight class from other cards
+      comparisonTableEl.querySelectorAll('.resultCard').forEach(c => c.classList.remove('highlighted'));
+      
+      // Add highlight class for animation
+      card.classList.add('highlighted');
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        card.classList.remove('highlighted');
+      }, 2500);
+      break;
+    }
   }
 }
 
@@ -1457,6 +1530,16 @@ function clearResults() {
   // clear the external results header
   const resultsHeaderEl = document.getElementById("resultsHeader");
   if (resultsHeaderEl) resultsHeaderEl.innerHTML = "";
+  if (resultsPanelContentEl) resultsPanelContentEl.innerHTML = "";
+  if (resultsPanelEl) resultsPanelEl.classList.add("hidden");
+  
+  // Hide results panel toggle button
+  const toggleBtn2 = document.getElementById("toggleResultsPanelBtn2");
+  if (toggleBtn2) {
+    toggleBtn2.classList.add("hidden");
+    toggleBtn2.classList.remove("active");
+  }
+  
   if (isMobile()) {
     setMobileControlsVisible(true);
   }
@@ -1551,6 +1634,20 @@ document.getElementById("questionArea").addEventListener("submit", (e) => {
   e.preventDefault();
   sendMessage();
 });
+
+clearResultsBtnEl?.addEventListener("click", clearResults);
+
+// Toggle results panel visibility
+function toggleResultsPanel() {
+  const isHidden = resultsPanelEl?.classList.toggle("hidden");
+  const toggleBtn2 = document.getElementById("toggleResultsPanelBtn2");
+  if (toggleBtn2) {
+    toggleBtn2.classList.toggle("active", !isHidden);
+  }
+}
+
+toggleResultsPanelBtn?.addEventListener("click", toggleResultsPanel);
+document.getElementById("toggleResultsPanelBtn2")?.addEventListener("click", toggleResultsPanel);
 
 // ===============================
 // INIT
