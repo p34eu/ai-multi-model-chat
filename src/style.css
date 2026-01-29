@@ -1144,10 +1144,7 @@ table.markdown-table th {
     padding: 12px;
   }
 
-  #bottomBar {
-    flex-direction: column;
-    gap: 10px;
-  }
+  
 
   #comparisonTable {
     overflow-x: auto;
