@@ -14,6 +14,11 @@ import modelsRoute from "./src/routes/models.js";
 import chatRoute from "./src/routes/chat.js";
 
 const app = express();
+// When running behind a reverse proxy (nginx, load balancer, cPanel, etc.)
+// enable 'trust proxy' so Express and middleware (like express-rate-limit)
+// can correctly use the X-Forwarded-* headers. This avoids validation
+// errors when a proxy sets X-Forwarded-For.
+app.set('trust proxy', true);
 
 const fallbackLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

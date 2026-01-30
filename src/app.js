@@ -23,209 +23,151 @@ let resultsSort = localStorage.getItem('resultsSort') || 'time'; // 'name' or 't
 let currentChatModel = null; // model ID for chat mode
 let chatHistories = {}; // modelId -> [{role, content, time?}]
 let isChatLoading = false; // loading state for chat requests
-let currentTheme = localStorage.getItem('theme') || 'dark'; // 'dark' or 'light'
+let currentTheme = localStorage.getItem('theme') || 'dark'; // Available: 'dark', 'light', 'blue', 'ocean', 'sunset', 'nature', 'purple'
+const availableThemes = ['dark', 'light', 'blue', 'ocean', 'sunset', 'nature', 'purple'];
 
 // Check if on mobile device
 function isMobile() {
   return window.innerWidth <= 768;
 }
 
-// Initialize collapsed providers for mobile
-if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
-  // Will be set after models are loaded
-}
+// ===============================
+// TRANSLATIONS
+// ===============================
 
-// ===============================
-// TRANSLATIONS
-// ===============================
-// TRANSLATIONS
-// ===============================
 const translations = {
   bg: {
-    title: "Сравнение на ИИ модели",
-    models: "Модели",
-    refreshModels: "⟳",
-    expandCollapse: "Разгъни/Сгъни всички",
-    history: "История",
-    clearHistory: "🗑️",
-    messagePlaceholder: "Напиши въпрос, който всички модели да отговорят...",
+    messagePlaceholder: "Задай вопрос...",
     sendButton: "Изпрати",
-    typing: "Моделите отговарят…",
+    ask: "Попитай",
+    models: "Модели",
+    history: "История",
+    failedModels: "Неработещи модели",
+    refreshFailed: "Освежи неработещи модели",
+    restoreModel: "Възстанови модел",
+    typing: "Пише...",
+    comparisonTitle: "Сравнение на отговори",
+    clearResults: "Очисти резултати",
     modelInfo: "Информация за модела",
     responseTime: "Време за отговор",
     question: "Въпрос",
     noResponse: "Този модел не е отговорил.",
-    comparisonTitle: "Получени резултати",
-    model: "Модел",
-    time: "Време",
-    answer: "Отговор",
-    clearResults: "Изчисти резултатите",
-    failedResponses: "Неуспешни отговори",
-    successfulResponses: "Успешни отговори",
-    language: "Език",
-    english: "English",
-    bulgarian: "Български",
-    loaded1:"Заредени ",
-    loaded2:" модела от ",
-    loaded3:" доставчици",
-    forcedSuffix: " (принудително обновяване)",
-    resetCache: "Нулирай кеша",
-    resetCacheSuccess: "Кешът е нулиран",
-    selectAll: "Избери всички",
-    deselectAll: "Премахни избора",
-    selectSuccessful: "Избери успешните",
-    hideModel: "Скрий модела",
-    showModel: "Покажи модела",
+    loaded1: "Заредени ",
+    loaded2: " модела от ",
+    loaded3: " доставчици",
+    forcedSuffix: "(принудително)",
+    openQuestionModal: "Нов въпрос",
+    sortBy: "Сортиране по",
+    sortName: "Име",
+    sortTime: "Време",
     of: "от",
-    hiddenModels: "Скрити модели",
-    sendToSelected: "Изпрати към избраните",
-    noModelsSelected: "Моля, изберете поне един модел",
-    failedModels: "Неуспешни",
-    failedModelsTab: "Неуспешни модели",
-    restoreModel: "Възстанови",
-    clearAllFailed: "Изчисти всички",
-    modelRestored: "Модел възстановен",
-    allFailedCleared: "Всички неуспешни модели са изчистени",
-    noFailedModels: "Няма неуспешни модели",
-    refreshFailed: "Презареди неуспешните",
-    failedGroup_quota_exceeded: "Изчерпана квота",
-    failedGroup_timeout: "Време изтече",
-    failedGroup_network_error: "Мрежова грешка",
+    models: "Модели",
+    successfulResponses: "успешни отговори",
+    failedResponses: "неработещи отговори",
+    replyBtn: "Отговори",
+    clearAllFailed: "Очисти всички неработещи модели",
+    allFailedCleared: "Всички неработещи модели бяха очистени",
+    selectSuccessfulNoResults: "Няма успешни модели за избор",
+    failedGroup_quota_exceeded: "Квота превишена",
+    failedGroup_timeout: "Timeout",
+    failedGroup_network_error: "Мрежна грешка",
     failedGroup_api_error: "API грешка",
     failedGroup_internal_error: "Вътрешна грешка",
-    failedGroup_unknown: "Неизвестна грешка",
-    sortBy: "Сортирай по",
-    sortName: "Име",
-    sortTime: "Време за отговор",
-    openQuestionModal: "Задай въпрос",
-    selectSuccessfulNoResults: "Този бутон избира успешните модели от последните резултати. Първо заредете резултати от историята или задайте въпрос.",
-    replyBtn: "Отговори",
-    chatPlaceholder: "Напиши съобщение...",
+    failedGroup_user_deselect: "Премахнати от потребител",
+    failedGroup_unknown: "Неизвестно",
+    showModel: "Покажи модел",
+    hideModel: "Скрий модел",
+    chatPlaceholder: "Пиши съобщение...",
+    resetCacheSuccess: "Кешът е успешно очищен",
+    noModelsSelected: "Моля, избери поне един модел",
+    removeModel: "Премахни модел",
+    removeModelConfirm: "Да добавя ли този модел към неработещите?",
+    removeModelDone: "Моделът беше добавен към неработещите",
+    themeDark: "Тъмна",
+    themeLight: "Светла",
+    themeBlue: "Синя",
+    themeOcean: "Океан",
+    themeSunset: "Залез",
+    themeNature: "Природа",
+    themePurple: "Лилава"
   },
   en: {
-    title: "AI Model Comparison Tool",
-    models: "Models",
-    refreshModels: "⟳",
-    expandCollapse: "Expand/Collapse All",
-    history: "History",
-    clearHistory: "🗑️",
-    messagePlaceholder: "Type a question for all models to answer...",
+    messagePlaceholder: "Ask a question...",
     sendButton: "Send",
-    typing: "Models are responding…",
-    modelInfo: "Model Information",
+    ask: "Ask",
+    models: "Models",
+    history: "History",
+    failedModels: "Failed Models",
+    refreshFailed: "Refresh failed models",
+    restoreModel: "Restore model",
+    typing: "Typing...",
+    comparisonTitle: "Comparison of responses",
+    clearResults: "Clear results",
+    modelInfo: "Model info",
     responseTime: "Response Time",
     question: "Question",
     noResponse: "This model did not respond.",
-    comparisonTitle: "Received Responses",
-    model: "Model",
-    time: "Time",
-    answer: "Answer",
-    clearResults: "Clear Results",
-    failedResponses: "Failed Responses",
-    successfulResponses: "Successful Responses",
-    language: "Language",
-    english: "English",
-    bulgarian: "Български",
-    loaded1:"Loaded ",
-    loaded2:" models from ",
-    loaded3:" providers",
-    forcedSuffix: " (forced refresh)",
-    resetCache: "Reset Cache",
-    resetCacheSuccess: "Cache has been reset",
-    selectAll: "Select All",
-    deselectAll: "Deselect All",
-    selectSuccessful: "Select Successful",
-    hideModel: "Hide model",
-    showModel: "Show model",
+    loaded1: "Loaded ",
+    loaded2: " models from ",
+    loaded3: " providers",
+    forcedSuffix: "(forced)",
+    openQuestionModal: "New question",
+    sortBy: "Sort by",
+    sortName: "Name",
+    sortTime: "Time",
     of: "of",
-    hiddenModels: "Hidden models",
-    sendToSelected: "Send to selected",
-    noModelsSelected: "Please select at least one model",
-    failedModels: "Failed",
-    failedModelsTab: "Failed Models",
-    restoreModel: "Restore",
-    clearAllFailed: "Clear All",
-    modelRestored: "Model restored",
-    allFailedCleared: "All failed models cleared",
-    noFailedModels: "No failed models",
+    models: "Models",
+    successfulResponses: "successful responses",
+    failedResponses: "failed responses",
+    replyBtn: "Reply",
+    clearAllFailed: "Clear all failed models",
+    allFailedCleared: "All failed models have been cleared",
+    selectSuccessfulNoResults: "No successful models to select",
     failedGroup_quota_exceeded: "Quota exceeded",
     failedGroup_timeout: "Timeout",
     failedGroup_network_error: "Network error",
     failedGroup_api_error: "API error",
     failedGroup_internal_error: "Internal error",
+    failedGroup_user_deselect: "Deselected by user",
     failedGroup_unknown: "Unknown",
-    sortBy: "Sort by",
-    sortName: "Name",
-    sortTime: "Response time",
-    openQuestionModal: "Ask question",
-    selectSuccessfulNoResults: "This button selects successful models from the last results. Load results from history or ask a question first.",
-    replyBtn: "Reply",
-    chatPlaceholder: "Type your message..."
+    showModel: "Show model",
+    hideModel: "Hide model",
+    chatPlaceholder: "Type a message...",
+    resetCacheSuccess: "Cache successfully cleared",
+    noModelsSelected: "Please select at least one model",
+    removeModel: "Remove model",
+    removeModelConfirm: "Add this model to failed models?",
+    removeModelDone: "Model added to failed models",
+    themeDark: "Dark",
+    themeLight: "Light",
+    themeBlue: "Blue",
+    themeOcean: "Ocean",
+    themeSunset: "Sunset",
+    themeNature: "Nature",
+    themePurple: "Purple"
   }
-}
+};
 
-// ===============================
-// TRANSLATION FUNCTIONS
-// ===============================
 function t(key) {
-  return translations[currentLanguage][key] || key;
-}
-
-function toggleTheme() {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('theme', currentTheme);
-  applyTheme();
-}
-
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  const themeBtn = document.getElementById('themeToggleBtn');
-  if (themeBtn) {
-    themeBtn.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
-    themeBtn.title = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
-  }
+  const lang = translations[currentLanguage] || translations.en;
+  return lang[key] || key;
 }
 
 function updateLanguage(lang) {
   currentLanguage = lang;
   localStorage.setItem("language", lang);
   applyTranslations();
-  // Re-render dynamic UI that depends on translations
-  try {
-    renderModelList();
-  } catch (e) {}
-  try {
-    renderHistory();
-  } catch (e) {}
-  try {
-    renderComparisonTable();
-  } catch (e) {}
-
-  // Re-render selected model panel if open
-  if (selectedModel) {
-    try {
-      selectModel(selectedModel);
-    } catch (e) {}
-  }
 }
 
-/**
- * Applies translations to all text content and placeholders in the DOM.
- * Updates title, labels, buttons, table headers, and section headers with translated strings.
- * Handles optional elements gracefully with null checks before updating.
- * Replaces hardcoded text in model details and response messages with translated equivalents.
- *
- * @function applyTranslations
- * @returns {void}
- */
 function applyTranslations() {
-  // Update title
-  document.title = t("title");
-  document.querySelector("#title").textContent = t("title");
 
-  // Update placeholders and buttons
+// Initialize collapsed providers for mobile
+if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
+  // Will be set after models are loaded
+}
+
+  // Update placeholders
   document.querySelector("#message").placeholder = t("messagePlaceholder");
-  document.querySelector("#sendBtn").textContent = t("sendButton");
 
   // Update section headers
 
@@ -316,11 +258,8 @@ function applyTranslations() {
   // Keep models sort buttons in sync when models are loaded
   try { updateModelsSortButtons(); } catch (e) {}
 
-  // Update modal button text
-  const openQuestionBtn = document.getElementById("openQuestionBtn");
-  if (openQuestionBtn) {
-    openQuestionBtn.textContent = t("openQuestionModal");
-  }
+  // Update button states with proper translations and model counts
+  try { updateQuestionButtonState(); } catch (e) {}
 }
 
 // ===============================
@@ -556,7 +495,7 @@ async function loadFailedModels() {
       return { id: it.id, errorType: it.errorType || "unknown", timestamp: it.timestamp };
     }).filter(Boolean);
 
-    const order = ["quota_exceeded", "timeout", "network_error", "api_error", "internal_error", "unknown"];
+    const order = ["quota_exceeded", "timeout", "network_error", "api_error", "internal_error", "user_deselect", "unknown"];
     const counts = {};
     entries.forEach((e) => {
       counts[e.errorType] = (counts[e.errorType] || 0) + 1;
@@ -582,38 +521,28 @@ function renderFailedModels() {
   if (failedModelsList.length === 0) {
     const li = document.createElement("li");
     li.className = "emptyPlaceholder";
-    li.textContent = t("noFailedModels");
+    li.textContent = "No failed models";
     failedModelsListEl.appendChild(li);
     return;
   }
 
-  // Normalize entries to objects: { id, errorType, timestamp }
-  const entries = failedModelsList.map((it) => {
-    if (!it) return null;
-    if (typeof it === "string") return { id: it, errorType: "unknown" };
-    return { id: it.id, errorType: it.errorType || "unknown", timestamp: it.timestamp };
-  }).filter(Boolean);
-
-  // Group by error type
+  // Group failed models by error type
   const groups = {};
-  entries.forEach((e) => {
-    const type = e.errorType || "unknown";
-    if (!groups[type]) groups[type] = [];
-    groups[type].push(e);
+  failedModelsList.forEach((obj) => {
+    const type = obj?.errorType || "unknown";
+    if (!groups[type]) {
+      groups[type] = [];
+    }
+    groups[type].push(obj);
   });
 
-  // Preferred order for display
-  const order = ["quota_exceeded", "timeout", "network_error", "api_error", "internal_error", "unknown"];
-
-  order.forEach((type) => {
-    if (!groups[type] || groups[type].length === 0) return;
-
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "failedGroup";
-
+  Object.keys(groups).forEach((type) => {
+    const groupDiv = document.createElement("li");
+    groupDiv.className = "failedModelGroup";
+    
+    const headerId = `failedGroup_${type}`;
     const header = document.createElement("div");
     header.className = "failedGroupHeader";
-    const headerId = `failedGroup_${type}`;
     header.id = headerId;
     header.setAttribute('role', 'button');
     header.setAttribute('aria-expanded', !collapsedFailedGroups[type]);
@@ -701,7 +630,6 @@ function renderFailedModels() {
       checkbox.className = "failedModelCheckbox";
       checkbox.value = obj.id;
       checkbox.checked = selectedFailedModels.includes(obj.id);
-      // announce model id on checkbox for screen readers
       checkbox.setAttribute('aria-label', obj.id);
       checkbox.onchange = (e) => {
         e.stopPropagation();
@@ -714,41 +642,19 @@ function renderFailedModels() {
         renderFailedModels();
       };
 
-      const icon = document.createElement("span");
-      icon.className = "modelIcon";
-      icon.innerHTML = getModelIcon(obj.id);
-
-      const name = document.createElement("span");
-      name.className = "modelName";
-      name.textContent = obj.id;
-
-      // If we have a timestamp, set it as tooltip and include it in aria-label for screen readers
-      if (obj.timestamp) {
-        try {
-          const formatted = new Date(obj.timestamp).toLocaleString();
-          name.title = formatted;
-          li.setAttribute('aria-label', `${obj.id} - ${formatted}`);
-        } catch (e) {
-          name.title = obj.timestamp;
-          li.setAttribute('aria-label', `${obj.id} - ${obj.timestamp}`);
-        }
-      } else {
-        li.setAttribute('aria-label', obj.id);
-      }
-
       li.appendChild(checkbox);
-      li.appendChild(icon);
-      li.appendChild(name);
-
+      const modelNameSpan = document.createElement("span");
+      modelNameSpan.className = "failedModelName";
+      modelNameSpan.textContent = obj.id;
+      li.appendChild(modelNameSpan);
       list.appendChild(li);
     });
 
     groupDiv.appendChild(list);
     failedModelsListEl.appendChild(groupDiv);
   });
-
-  updateFailedModelsButtonState();
 }
+
 
 function toggleFailedGroup(type) {
   collapsedFailedGroups[type] = !collapsedFailedGroups[type];
@@ -824,6 +730,50 @@ function showMessage(text, duration = 3000) {
     msg.classList.add("fadeOut");
     setTimeout(() => msg.remove(), 300);
   }, duration);
+}
+
+async function addModelToFailedByUser(modelId) {
+  if (!modelId) return;
+  const confirmText = t("removeModelConfirm") || "Add this model to failed models?";
+  if (!confirm(`${confirmText}\n${modelId}`)) return;
+
+  try {
+    const res = await fetch("/api/models/failed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ modelId, errorType: "user_deselect" }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+
+    // Remove model from local selections/visibility
+    selectedModels = selectedModels.filter((id) => id !== modelId);
+    hiddenModels = hiddenModels.filter((id) => id !== modelId);
+    localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+    localStorage.setItem("hiddenModels", JSON.stringify(hiddenModels));
+
+    // Remove from current answers and rerender
+    if (answers && answers[modelId]) {
+      delete answers[modelId];
+    }
+
+    if (currentChatModel === modelId) {
+      currentChatModel = null;
+      chatPanelEl?.classList.add("hidden");
+      resultsPanelEl?.classList.remove("hidden");
+      comparisonTableEl?.classList.remove("hidden");
+    }
+
+    await loadFailedModels();
+    await loadModels(true);
+    renderComparisonTable();
+    updateSelectionCount();
+    showMessage(t("removeModelDone") || "Model added to failed models");
+  } catch (error) {
+    console.error("Failed to add model to failed list:", error);
+  }
 }
 
 // ===============================
@@ -1038,6 +988,40 @@ function toggleProviderHidden(providerName) {
   updateSelectionCount();
 }
 
+// Toggle select/deselect all visible models for a provider
+function toggleSelectProvider(providerName) {
+  const providerModels = models.filter((m) => m.provider === providerName);
+  const visibleModels = providerModels.filter((m) => {
+    if (shouldHideModel(m.id)) return false;
+    if (isProviderHidden(m.provider)) return false;
+    if (isModelUserHidden(m.id)) return false;
+    return true;
+  });
+
+  if (visibleModels.length === 0) return;
+
+  const anyNotSelected = visibleModels.some((m) => !selectedModels.includes(m.id));
+
+  if (anyNotSelected) {
+    // Select all visible models
+    visibleModels.forEach((m) => {
+      if (!selectedModels.includes(m.id)) selectedModels.push(m.id);
+    });
+  } else {
+    // Deselect all visible models
+    selectedModels = selectedModels.filter((id) => {
+      const mm = models.find((m) => m.id === id);
+      if (!mm) return false;
+      if (mm.provider === providerName && !isModelUserHidden(id)) return false;
+      return true;
+    });
+  }
+
+  localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
+  renderModelList();
+  updateSelectionCount();
+}
+
 // Check if a provider is hidden
 function isProviderHidden(providerName) {
   return hiddenProviders.includes(providerName);
@@ -1055,6 +1039,36 @@ function updateSelectionCount() {
       return true;
     });
     countEl.textContent = `${selectedModels.length}/${visibleModels.length}`;
+  }
+  // Update question button state
+  updateQuestionButtonState();
+}
+
+// Update question button state with model count
+function updateQuestionButtonState() {
+  const btn = document.getElementById("openQuestionBtn");
+  if (!btn) return;
+  
+  const hasSelected = selectedModels.length > 0;
+  btn.classList.toggle("disabled", !hasSelected);
+  
+  const icon = "✉️";
+  if (hasSelected) {
+    btn.innerHTML = `${icon} ${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
+    btn.title = `${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
+  } else {
+    btn.innerHTML = `${icon} ${t("openQuestionModal")}`;
+    btn.title = t("noModelsSelected");
+  }
+  
+  // Also update send button with count
+  const sendBtn = document.getElementById("sendBtn");
+  if (sendBtn) {
+    if (hasSelected) {
+      sendBtn.textContent = `${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
+    } else {
+      sendBtn.textContent = t("sendButton");
+    }
   }
 }
 
@@ -1093,10 +1107,26 @@ function renderModelList() {
     grouped[provider].push(m);
   });
 
-  // Show all providers (both active and inactive)
-  Object.keys(providerStatus)
-    .sort()
-    .forEach((providerName) => {
+  // Show all providers (active first, then inactive) with a visual separator
+  const allProviderNames = Object.keys(providerStatus).sort();
+  const activeProviders = allProviderNames.filter((p) => {
+    const s = providerStatus[p];
+    return s && s.enabled && s.hasApiKey;
+  });
+  const inactiveProviders = allProviderNames.filter((p) => !activeProviders.includes(p));
+  const orderedProviders = [...activeProviders, ...inactiveProviders];
+
+  orderedProviders.forEach((providerName, idx) => {
+    // Insert a separator before the first inactive provider
+    if (idx === activeProviders.length && inactiveProviders.length > 0) {
+      const sepLi = document.createElement('li');
+      sepLi.className = 'providerSeparator';
+      const sepDiv = document.createElement('div');
+      sepDiv.className = 'separatorText';
+      sepDiv.textContent = 'Inactive providers';
+      sepLi.appendChild(sepDiv);
+      modelListEl.appendChild(sepLi);
+    }
       const list = grouped[providerName] || [];
       const status = providerStatus[providerName];
       const isActive = status && status.enabled && status.hasApiKey;
@@ -1136,52 +1166,61 @@ function renderModelList() {
       const headerRight = document.createElement("div");
       headerRight.className = "headerRight";
 
-      // Status badge for inactive providers
-      const statusBadge = isActive
-        ? ``
-        : `<span class="inactiveBadge">⚠ No API Key</span>`;
+      // For inactive providers show only a grayed badge (no interactive controls)
+      let providerHideBtn = null;
+      if (isActive) {
+        const providerModels = list || [];
+        const selectedCount = providerModels.filter(m => isModelSelected(m.id) && !isModelUserHidden(m.id)).length;
+        const activeCount = providerModels.filter(m => !shouldHideModel(m.id) && !isModelUserHidden(m.id)).length;
+        const totalCount = providerModels.length;
 
-      // Calculate counts for this provider
-      const providerModels = list || [];
-      const selectedCount = providerModels.filter(m => isModelSelected(m.id) && !isModelUserHidden(m.id)).length;
-      const activeCount = providerModels.filter(m => !shouldHideModel(m.id) && !isModelUserHidden(m.id)).length;
-      const totalCount = providerModels.length;
+        const countsSpan = document.createElement("span");
+        countsSpan.className = "providerCounts";
+        countsSpan.innerHTML = `(${selectedCount}) • (${activeCount}) ${t("of")} (${totalCount})`;
+        countsSpan.style.cursor = 'pointer';
+        countsSpan.title = `Selected: ${selectedCount}, Active: ${activeCount}, Total: ${totalCount}`;
+        countsSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleSelectProvider(providerName);
+        });
 
-      const countsSpan = document.createElement("span");
-      countsSpan.className = "providerCounts";
-      countsSpan.innerHTML = `(${selectedCount}), (${activeCount}) ${t("of")} (${totalCount})${statusBadge}`;
-      
-      // Add title attributes to describe the numbers
-      countsSpan.title = `Selected: ${selectedCount}, Active: ${activeCount}, Total: ${totalCount}`;
+        // Hide provider button
+        providerHideBtn = document.createElement("button");
+        providerHideBtn.className = "providerHideBtn";
+        providerHideBtn.title = isProviderHidden(providerName) ? t("showModel") : t("hideModel");
+        providerHideBtn.innerHTML = isProviderHidden(providerName) ? "🚫" : "👁️";
+        providerHideBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleProviderHidden(providerName);
+        });
 
-      // Hide provider button
-      const providerHideBtn = document.createElement("button");
-      providerHideBtn.className = "providerHideBtn";
-      providerHideBtn.title = isProviderHidden(providerName) ? t("showModel") : t("hideModel");
-      providerHideBtn.innerHTML = isProviderHidden(providerName) ? "🚫" : "👁️";
-      providerHideBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleProviderHidden(providerName);
-      });
-
-      headerRight.appendChild(countsSpan);
-      headerRight.appendChild(providerHideBtn);
+        headerRight.appendChild(countsSpan);
+        headerRight.appendChild(providerHideBtn);
+      } else {
+        const inactiveLabel = document.createElement("span");
+        inactiveLabel.className = "inactiveBadge";
+        inactiveLabel.textContent = '⚠ No API Key';
+        headerRight.appendChild(inactiveLabel);
+      }
 
       headerContent.appendChild(headerLeft);
       headerContent.appendChild(headerRight);
       header.appendChild(headerContent);
 
-      // Toggle collapse on click (but not on hide button)
-      header.addEventListener("click", (e) => {
-        if (e.target === providerHideBtn || providerHideBtn.contains(e.target)) return;
-        toggleProvider(providerName);
-      });
-      header.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
+      // Toggle collapse on click for active providers only
+      if (isActive) {
+        header.addEventListener("click", (e) => {
+          // If clicked on the hide button (handled above), ignore
+          if (e.target === providerHideBtn || (e.target && providerHideBtn && providerHideBtn.contains && providerHideBtn.contains(e.target))) return;
           toggleProvider(providerName);
-        }
-      });
+        });
+        header.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggleProvider(providerName);
+          }
+        });
+      }
 
       // Use a nested <ul> for the provider models so screen readers announce them as lists
       const modelsContainer = document.createElement("ul");
@@ -1938,6 +1977,13 @@ function renderComparisonTable() {
     });
   });
 
+  comparisonTableEl.querySelectorAll('.removeModelBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const modelId = e.target.dataset.modelId;
+      addModelToFailedByUser(modelId);
+    });
+  });
+
   // No dynamic measurement needed: header is outside the scroll container and sticks under the top bar.
   if (isMobile()) {
     // setMobileControlsVisible(true);
@@ -2005,17 +2051,28 @@ function createComparisonTable(answerSet, isSuccessful = false) {
     meta.className = "cardMeta";
     meta.textContent = `${ans.time} ms`;
 
+    const actions = document.createElement("div");
+    actions.className = "cardActions";
+    actions.appendChild(meta);
+
     // Only add reply button for successful responses
     if (isSuccessful) {
       const replyBtn = document.createElement("button");
       replyBtn.className = "replyBtn";
       replyBtn.textContent = t("replyBtn");
       replyBtn.dataset.modelId = id;
-      header.appendChild(replyBtn);
+      actions.appendChild(replyBtn);
     }
 
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "removeModelBtn";
+    removeBtn.textContent = t("removeModel") || "Remove model";
+    removeBtn.title = t("removeModel") || "Remove model";
+    removeBtn.dataset.modelId = id;
+    actions.appendChild(removeBtn);
+
     header.appendChild(title);
-    header.appendChild(meta);
+    header.appendChild(actions);
 
     const body = document.createElement("div");
     body.className = "cardBody";
@@ -2373,15 +2430,16 @@ async function sendMessage() {
   const text = messageInput.value.trim();
   if (!text || !models.length) return;
 
+  // Clear input and close the modal immediately so the UI isn't blocked
+  // while askAllModels performs network requests.
   messageInput.value = "";
-  await askAllModels(text);
-
-  // Close modal after submission
   try {
     if (questionModal && !questionModal.classList.contains('hidden')) {
       closeQuestionModal();
     }
   } catch (e) {}
+
+  await askAllModels(text);
 }
 
 sendBtn.onclick = sendMessage;
@@ -2550,6 +2608,43 @@ toggleResultsPanelBtn?.addEventListener("click", toggleResultsPanel);
 document.getElementById("toggleResultsPanelBtn2")?.addEventListener("click", toggleResultsPanel);
 
 // ===============================
+// THEME
+// ===============================
+function applyTheme() {
+  const theme = currentTheme || 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  const themeBtn = document.getElementById("themeToggleBtn");
+  if (themeBtn) {
+    const themeIcons = {
+      dark: '🌙',
+      light: '☀️',
+      blue: '💙',
+      ocean: '🌊',
+      sunset: '🌅',
+      nature: '🌿',
+      purple: '💜'
+    };
+    themeBtn.textContent = themeIcons[theme] || '🌙';
+    const themeKey = 'theme' + theme.charAt(0).toUpperCase() + theme.slice(1);
+    themeBtn.title = t(themeKey) || theme;
+  }
+}
+
+function toggleTheme() {
+  const currentIndex = availableThemes.indexOf(currentTheme);
+  const nextIndex = (currentIndex + 1) % availableThemes.length;
+  currentTheme = availableThemes[nextIndex];
+  localStorage.setItem('theme', currentTheme);
+  applyTheme();
+}
+
+function updateModelsSortButtons() {
+  const isName = resultsSort === 'name';
+  document.getElementById('modelsSortNameBtn')?.classList.toggle('active', isName);
+  document.getElementById('modelsSortTimeBtn')?.classList.toggle('active', !isName);
+}
+
+// ===============================
 // INIT
 // ===============================
 loadModels();
@@ -2559,6 +2654,7 @@ applyTranslations();
 applyTheme(); // Apply saved theme on load
 typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
 initMobileLayout();
+updateQuestionButtonState(); // Initialize question button state
 
 window.addEventListener("resize", () => {
   initMobileLayout();
@@ -2629,6 +2725,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (ob) ob.addEventListener('click', (e) => {
     e.preventDefault();
+    // Check if button is disabled (no models selected)
+    if (ob.classList.contains('disabled')) {
+      showMessage(t("noModelsSelected"));
+      return;
+    }
     openQuestionModal();
   });
 

@@ -49,6 +49,7 @@ export function initFailedModelsCache() {
             id: entry.id,
             errorType: entry.errorType || "unknown",
             timestamp: entry.timestamp || new Date().toISOString(),
+            error: entry.error || null,
           });
         }
       });
@@ -65,13 +66,14 @@ export function initFailedModelsCache() {
  * @param {string} modelId
  * @param {string} errorType
  */
-export function addFailedModel(modelId, errorType = "unknown") {
+export function addFailedModel(modelId, errorType = "unknown", error = null) {
   if (!modelId) return false;
 
   failedModelsCache.set(modelId, {
     id: modelId,
     errorType: errorType || "unknown",
     timestamp: new Date().toISOString(),
+    error: error || null,
   });
 
   persistFailedModels();

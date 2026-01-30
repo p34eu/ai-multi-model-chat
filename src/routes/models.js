@@ -9,6 +9,7 @@ import {
   markModelQuotaExceeded,
   markModelPaid,
   markModelWorking,
+  getFilteredModels,
   isKnownFreeModel,
 } from "../modelStatus.js";
 
@@ -212,8 +213,12 @@ const PROVIDERS = {
   },
   huggingface: {
     name: "Hugging Face",
-    baseUrl: "https://api-inference.huggingface.co",
-    modelsUrl: "/models",
+    // Use the main Hugging Face API host for listing available models. The
+    // inference API host (api-inference.huggingface.co) is used for model
+    // inference requests in chat.js; listing models must use the huggingface.co
+    // API endpoint to avoid 410/Deprecated responses.
+    baseUrl: "https://huggingface.co",
+    modelsUrl: "/api/models",
     chatUrl: (model) => `/models/${model.replace("huggingface-", "")}`,
     get apiKey() {
       return process.env.HUGGINGFACE_API_KEY;
@@ -245,6 +250,10 @@ function isValidChatModel(modelId) {
   if (!modelId || typeof modelId !== "string") return false;
 
   const id = modelId.toLowerCase();
+
+  // If modelId is namespaced like owner/model, also inspect the model part
+  const parts = id.split('/');
+  const shortName = parts.length > 1 ? parts[1] : parts[0];
 
   // Exclude non-chat/completion models
   const exclusions = [
@@ -285,13 +294,30 @@ function isValidChatModel(modelId) {
     "demo",
     "dall-e",
     "image",
+    "vision",
     "code-search",
     "search",
     "similarity",
+    // legacy / old model families not relevant for modern chat
+    "gpt-2",
+    "gpt2",
+    "gpt-neo",
+    "gpt-j",
+    "gpt-j-",
+    "gpt-neo-x",
+    "bert",
+    "roberta",
+    "distilbert",
+    "electra",
+    "albert",
+    "xlnet",
+    "t5",
+    "bart",
+    "transformer",
   ];
 
   for (const exclusion of exclusions) {
-    if (id.includes(exclusion)) return false;
+    if (id.includes(exclusion) || shortName.includes(exclusion)) return false;
   }
 
   // Include models that are chat/completion capable
@@ -318,6 +344,10 @@ function isValidChatModel(modelId) {
     "gemma",
   ];
 
+  // If the shortName explicitly contains an inclusion keyword, accept it.
+  if (inclusions.some((inclusion) => shortName.includes(inclusion))) return true;
+
+  // Otherwise require at least one inclusion in the full id
   return inclusions.some((inclusion) => id.includes(inclusion));
 }
 
@@ -383,7 +413,27 @@ async function fetchProviderModels(provider) {
     ) {
       // Anthropic returns array in data field with different structure
       models = data.data
-        .filter((m) => m.type === "model" && isValidChatModel(m.id))
+        .filter((m) => {
+          if (m.type !== "model") return false;
+
+          const modelId = (m.id || "").toString();
+
+          // Prefer explicit capability metadata when available
+          const caps = m.capabilities || m.metadata?.capabilities || {};
+          if (caps && caps.completion_chat === true) return true;
+
+          // Tags/labels may indicate chat/conversational capability
+          const tags = Array.isArray(m.tags)
+            ? m.tags.map((t) => t.toString().toLowerCase())
+            : Array.isArray(m.metadata?.tags)
+            ? m.metadata.tags.map((t) => t.toString().toLowerCase())
+            : [];
+          const chatIndicators = ["chat", "conversational", "assistant", "instruct", "completion"];
+          if (tags.some((t) => chatIndicators.includes(t))) return true;
+
+          // Fallback to heuristic on id
+          return isValidChatModel(modelId);
+        })
         .map((m) => ({
           id: `${provider.modelPrefix}${m.id}`,
           created: new Date(m.created_at).getTime() / 1000,
@@ -402,10 +452,20 @@ async function fetchProviderModels(provider) {
           const hasCompletion =
             m.capabilities && m.capabilities.completion_chat === true;
 
+          // Prefer explicit capability metadata
+          if (hasCompletion) return true;
+
+          // Use tags/metadata when available
+          const tags = Array.isArray(m.tags)
+            ? m.tags.map((t) => t.toString().toLowerCase())
+            : Array.isArray(m.metadata?.tags)
+            ? m.metadata.tags.map((t) => t.toString().toLowerCase())
+            : [];
+          const chatIndicators = ["chat", "instruct", "completion", "conversational", "assistant"];
+          if (tags.some((t) => chatIndicators.includes(t))) return true;
+
           return (
-            (hasCompletion ||
-              m.id.includes("instruct") ||
-              m.id.includes("chat")) &&
+            (m.id.includes("instruct") || m.id.includes("chat")) &&
             isValidChatModel(m.id)
           );
         })
@@ -422,12 +482,19 @@ async function fetchProviderModels(provider) {
     ) {
       // Cohere returns array in models field
       models = data.models
-        .filter(
-          (m) =>
-            !m.is_deprecated &&
-            m.endpoints?.includes("chat") &&
-            isValidChatModel(m.name)
-        )
+        .filter((m) => {
+          if (m.is_deprecated) return false;
+
+          // If Cohere exposes endpoints, prefer chat endpoint
+          if (m.endpoints && m.endpoints.includes("chat")) return isValidChatModel(m.name);
+
+          // Otherwise use tags/metadata if available
+          const tags = Array.isArray(m.tags) ? m.tags.map(t => t.toString().toLowerCase()) : [];
+          const nonChat = ["embed", "embedding", "classification", "search", "generation-image"];
+          if (tags.some(t => nonChat.includes(t))) return false;
+
+          return isValidChatModel(m.name);
+        })
         .map((m) => ({
           id: `${provider.modelPrefix}${m.name}`,
           created: Date.now() / 1000,
@@ -438,9 +505,19 @@ async function fetchProviderModels(provider) {
       // OpenAI/Groq format
       models = data.data
         .filter((m) => {
-          const modelId = m.id.toLowerCase();
+          const modelId = (m.id || "").toString().toLowerCase();
 
-          // Check if model is valid for chat
+          // If provider supplies tags/metadata, use them to exclude non-chat models
+          const metaTags = Array.isArray(m.tags)
+            ? m.tags.map((t) => t.toString().toLowerCase())
+            : Array.isArray(m.metadata?.tags)
+            ? m.metadata.tags.map((t) => t.toString().toLowerCase())
+            : [];
+
+          const nonChatIndicators = ["image", "vision", "audio", "embed", "embedding", "speech", "whisper", "tts", "transcribe"];
+          if (metaTags.some((t) => nonChatIndicators.includes(t))) return false;
+
+          // Check if model is valid for chat (heuristic)
           if (!isValidChatModel(modelId)) return false;
 
           // Additional filtering for OpenAI/Groq
@@ -472,6 +549,106 @@ async function fetchProviderModels(provider) {
           owner: m.owned_by || provider.name.toLowerCase(),
           provider: provider.name,
         }));
+    }
+
+    // Hugging Face returns a top-level array of model objects at
+    // https://huggingface.co/api/models - handle that format explicitly.
+    if (provider.name === "Hugging Face" && Array.isArray(data)) {
+      try {
+        console.debug(`Fetched ${data.length} Hugging Face models (sample: ${data[0]?.id || data[0]?._id})`);
+      } catch (e) {}
+
+      models = data
+        .filter((m) => {
+          const id = (m.id || m.modelId || m._id || "").toString();
+          if (!id) return false;
+          // Skip private or gated models
+          if (m.private === true) return false;
+          // Use Hugging Face metadata when available to better detect chat-capable models.
+          const pipelineTag = (m.pipeline_tag || "").toString().toLowerCase();
+          const tags = Array.isArray(m.tags) ? m.tags.map(t => t.toString().toLowerCase()) : [];
+
+          // Exclude image/audio/vision/speech specialized models
+          const nonChatPipelines = [
+            "image-classification",
+            "image-segmentation",
+            "text-to-image",
+            "image-to-image",
+            "automatic-speech-recognition",
+            "text-to-speech",
+            "audio-classification",
+            "voice",
+            "speech",
+            "text-to-speech",
+            "audio",
+            "stable-diffusion",
+            "diffusion",
+            "image-generation",
+          ];
+
+          if (nonChatPipelines.includes(pipelineTag) || tags.some(t => nonChatPipelines.includes(t))) {
+            return false;
+          }
+
+          // Accept if pipeline indicates text-generation / conversational / text-to-text / question-answering
+          const chatPipelines = ["text-generation", "text-to-text", "conversational", "question-answering", "text-generation-inference"];
+          if (chatPipelines.includes(pipelineTag) || tags.some(t => chatPipelines.includes(t))) {
+            return true;
+          }
+
+          // Reject obvious weight/file repositories or offline packages
+          const lowerId = id.toString().toLowerCase();
+          const disqualifiers = [
+            "gguf",
+            "ggml",
+            "safetensors",
+            "ckpt",
+            "pt",
+            "pth",
+            "onnx",
+            "quantized",
+            "q4",
+            "q5",
+          ];
+          if (disqualifiers.some((d) => lowerId.includes(d))) return false;
+
+          // Prefer explicit endpoint/inference compatibility tags when available
+          const endpointIndicators = [
+            "endpoints_compatible",
+            "inference",
+            "text-generation-inference",
+            "endpoints",
+            "inference-api",
+            "hf-inference",
+          ];
+          if (endpointIndicators.some((t) => tags.includes(t) || pipelineTag.includes(t))) {
+            return true;
+          }
+
+          // If metadata is not decisive, be more permissive: accept models
+          // that either look chatty by heuristic or have chat/conversational tags.
+          // Still reject raw weight repos (gguf/ggml/etc.) above.
+          const chatIndicators = ["chat", "conversational", "assistant", "instruct", "question-answering", "text-generation"];
+          const hasChatTag = tags.some((t) => chatIndicators.includes(t));
+
+          // Accept if tags/pipeline indicate chat OR heuristic believes it's chat-capable
+          if (hasChatTag || chatPipelines.includes(pipelineTag)) return true;
+
+          // Fallback: accept if heuristic deems it chat-capable
+          return isValidChatModel(id);
+        })
+        .map((m) => {
+          const id = (m.id || m.modelId || m._id).toString();
+          const created = m.createdAt
+            ? Math.round(new Date(m.createdAt).getTime() / 1000)
+            : Date.now() / 1000;
+          return {
+            id: `${provider.modelPrefix}${id}`,
+            created,
+            owner: (id.split("/")[0] || provider.name.toLowerCase()),
+            provider: provider.name,
+          };
+        });
     }
 
     return models;
@@ -521,16 +698,19 @@ router.get("/", async (req, res) => {
     const providerResults = await Promise.all(providerPromises);
     const allModels = providerResults.flat();
 
+    // Filter out models marked as quota_exceeded or paid in the server-side cache
+    const statusFilteredModels = getFilteredModels(allModels);
+
     // Update provider status with actual model counts (already initialized at the top)
     Object.keys(providerStatus).forEach((providerName) => {
-      providerStatus[providerName].modelCount = allModels.filter(
+      providerStatus[providerName].modelCount = statusFilteredModels.filter(
         (m) => m.provider === providerName
       ).length;
     });
 
     // Sort models by provider and name
-    const sortedModels = allModels
-      .filter((m) => m.id)
+    const sortedModels = statusFilteredModels
+      .filter((m) => m && m.id)
       // Filter out failed models permanently
       .filter((m) => !isFailedModel(m.id))
       .sort((a, b) => {
@@ -634,17 +814,24 @@ router.get("/failed", (req, res) => {
 
 // POST /api/models/failed - Add a model to failed cache
 router.post("/failed", (req, res) => {
-  const { modelId, errorType } = req.body;
+  const { modelId, errorType, error } = req.body;
   
   if (!modelId) {
     return res.status(400).json({ error: "modelId is required" });
   }
+
+  const type = errorType || "unknown";
+  let finalError = error || null;
+
+  if (type === "user_deselect") {
+    finalError = `Deselected by user from ip : ${req.ip}`;
+  }
   
-  addFailedModel(modelId, errorType || "unknown");
+  addFailedModel(modelId, type, finalError);
   // Invalidate server-side models cache so frontend sees updated list immediately
   cachedModels = null;
   cacheTime = 0;
-  res.json({ success: true, modelId, errorType: errorType || "unknown", message: `Model ${modelId} added to failed cache` });
+  res.json({ success: true, modelId, errorType: type, error: finalError, message: `Model ${modelId} added to failed cache` });
 });
 
 // DELETE /api/models/failed/:modelId - Remove a model from failed cache
@@ -669,6 +856,36 @@ router.delete("/failed", (req, res) => {
   cachedModels = null;
   cacheTime = 0;
   res.json({ success: true, message: "All failed models cleared" });
+});
+
+// POST /api/models/failed/batch-delete - Remove multiple models from failed cache
+router.post("/failed/batch-delete", (req, res) => {
+  const { modelIds } = req.body;
+  if (!Array.isArray(modelIds) || modelIds.length === 0) {
+    return res.status(400).json({ error: "modelIds (array) is required" });
+  }
+
+  const removed = [];
+  const notFound = [];
+
+  for (const id of modelIds) {
+    try {
+      const ok = removeFailedModel(id);
+      if (ok) removed.push(id);
+      else notFound.push(id);
+    } catch (e) {
+      // on error, treat as not found
+      notFound.push(id);
+    }
+  }
+
+  if (removed.length > 0) {
+    // Invalidate models cache so frontend sees restored models immediately
+    cachedModels = null;
+    cacheTime = 0;
+  }
+
+  res.json({ success: true, removedCount: removed.length, removed, notFound });
 });
 
 export default router;

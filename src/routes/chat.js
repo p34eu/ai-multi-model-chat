@@ -188,9 +188,10 @@ const PROVIDERS = {
   },
   huggingface: {
     name: "Hugging Face",
-    baseUrl: "https://api-inference.huggingface.co",
+    // Use the HF Router API for chat completions (supports repo:model identifiers)
+    baseUrl: "https://router.huggingface.co/v1",
     modelsUrl: "/models",
-    chatUrl: (model) => `/models/${model.replace("huggingface-", "")}`,
+    chatUrl: "/chat/completions",
     get apiKey() {
       return process.env.HUGGINGFACE_API_KEY;
     },
@@ -198,16 +199,14 @@ const PROVIDERS = {
       return !!process.env.HUGGINGFACE_API_KEY;
     },
     modelPrefix: "huggingface-",
+    // Router expects: { model: "owner/repo:variant", messages: [{role, content}, ...] }
     formatMessage: (messages, model) => ({
-      inputs: messages.filter(m => m.role === 'user').map(m => m.content).join('\n'),
-      parameters: {
-        temperature: 0.8,
-        top_p: 0.9,
-        max_new_tokens: 1024,
-      },
+      model: model.replace("huggingface-", ""),
+      messages: Array.isArray(messages) ? messages : messages ? [messages] : [],
     }),
     getHeaders: (apiKey) => ({
       Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
     }),
   },
 };
@@ -411,15 +410,21 @@ function handleStreamingResponse(provider, response, res) {
 }
 
 router.post("/", async (req, res) => {
-  const { messages, model } = req.body;
+  // Accept either `messages` (array) or `message` (single string) from clients.
+  const { messages, message, model } = req.body;
 
-  if (!messages || !model) {
+  // Normalize to an array of messages expected by provider.formatMessage
+  let msgs = messages;
+  if (!msgs && message) {
+    msgs = [{ role: 'user', content: message }];
+  }
+
+  if (!msgs || !model) {
     return res.status(400).json({ error: "Missing messages or model" });
   }
 
-  let msgs = messages;
-  if (!Array.isArray(messages)) {
-    msgs = [{role: 'user', content: messages}];
+  if (!Array.isArray(msgs)) {
+    msgs = [{ role: 'user', content: msgs }];
   }
 
   if (
@@ -453,7 +458,8 @@ router.post("/", async (req, res) => {
         ? provider.chatUrl(model)
         : provider.chatUrl;
 
-    const url = `${provider.baseUrl}${chatUrl}`;
+    // Use a mutable variable because some providers (Google) require appending query params.
+    let url = `${provider.baseUrl}${chatUrl}`;
     const headers = {
       "Content-Type": "application/json",
       ...provider.headers,
@@ -488,8 +494,8 @@ router.post("/", async (req, res) => {
       
       if (isQuotaError) {
         markModelQuotaExceeded(model);
-        // Also add to permanent failed models cache with typed reason
-        addFailedModel(model, "quota_exceeded");
+        // Also add to permanent failed models cache with typed reason and error text
+        addFailedModel(model, "quota_exceeded", errorText);
         console.log(`Marked model ${model} as quota exceeded and added to failed cache`);
       } else {
         // Classify obvious timeout messages as timeout
@@ -498,7 +504,7 @@ router.post("/", async (req, res) => {
           errType = "timeout";
         }
 
-        addFailedModel(model, errType);
+        addFailedModel(model, errType, errorText);
         console.log(`Added model ${model} to failed models cache (${errType})`);
       }
       
@@ -529,7 +535,7 @@ router.post("/", async (req, res) => {
     // Record as internal/network error for debugging -> add to failed cache
     try {
       if (typeof addFailedModel === "function") {
-        addFailedModel(model, "internal_error");
+        addFailedModel(model, "internal_error", err.message || String(err));
         console.log(`Added model ${model} to failed cache due to internal error`);
       }
     } catch (e) {}
