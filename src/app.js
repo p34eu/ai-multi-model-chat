@@ -1773,20 +1773,7 @@ function renderComparisonTable() {
       </div>
     `;
 
-    let modelListHtml = '';
-    modelIds.forEach((id) => {
-      const ans = successfulAnswers[id];
-      const speedClass = getSpeedClass(ans.time);
-      modelListHtml += `
-        <div class="modelListItem" data-model-id="${id}">
-          ${getModelIcon(id)}
-          <span class="modelName">${id}</span>
-          <span class="modelTime ${speedClass}">${ans.time}ms</span>
-        </div>
-      `;
-    });
-
-    // Insert sort controls before the list
+    // Build the safe HTML structure
     resultsPanelContentEl.innerHTML = `
       <div class="resultsPanelStats">
         <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
@@ -1797,35 +1784,49 @@ function renderComparisonTable() {
       </div>
       <div class="resultsPanelModelList">
         <div class="resultsPanelLabel">${t("models")}</div>
-        ${sortControlsHtml}
-        ${modelListHtml}
+        <div class="sortControls">
+          <span class="sortLabel">${t('sortBy')}:</span>
+          <button class="sortBtn ${resultsSort === 'name' ? 'active' : ''}" data-sort="name">${t('sortName')}</button>
+          <button class="sortBtn ${resultsSort === 'time' ? 'active' : ''}" data-sort="time">${t('sortTime')}</button>
+        </div>
+        <div id="modelListContainer"></div>
       </div>
     `;
     
     // Safely set the question text to prevent HTML injection
-    let questionTextEl = resultsPanelContentEl.querySelector('#resultsPanelQuestionText');
+    const questionTextEl = resultsPanelContentEl.querySelector('#resultsPanelQuestionText');
     if (questionTextEl) {
       questionTextEl.textContent = lastQuestion;
     }
     
-    resultsPanelContentEl.innerHTML = `
-      <div class="resultsPanelStats">
-        <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
-      </div>
-      <div class="resultsPanelQuestion">
-        <div class="resultsPanelLabel">${t("question")}</div>
-        <div class="resultsPanelText" id="resultsPanelQuestionText"></div>
-      </div>
-      <div class="resultsPanelModelList">
-        <div class="resultsPanelLabel">${t("models")}</div>
-        ${modelListHtml}
-      </div>
-    `;
-    
-    // Safely set the question text to prevent HTML injection
-    questionTextEl = resultsPanelContentEl.querySelector('#resultsPanelQuestionText');
-    if (questionTextEl) {
-      questionTextEl.textContent = lastQuestion;
+    // Safely build model list items using DOM API (no innerHTML for user data)
+    const modelListContainer = resultsPanelContentEl.querySelector('#modelListContainer');
+    if (modelListContainer) {
+      modelIds.forEach((id) => {
+        const ans = successfulAnswers[id];
+        const speedClass = getSpeedClass(ans.time);
+        
+        const item = document.createElement('div');
+        item.className = 'modelListItem';
+        item.dataset.modelId = id;
+        
+        // Icon (safe, comes from function)
+        item.innerHTML = getModelIcon(id);
+        
+        // Model name (safe from textContent)
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'modelName';
+        nameSpan.textContent = id;
+        item.appendChild(nameSpan);
+        
+        // Response time (safe from textContent)
+        const timeSpan = document.createElement('span');
+        timeSpan.className = `modelTime ${speedClass}`;
+        timeSpan.textContent = `${ans.time}ms`;
+        item.appendChild(timeSpan);
+        
+        modelListContainer.appendChild(item);
+      });
     }
     
     // Add click handlers to model list items
@@ -1840,7 +1841,7 @@ function renderComparisonTable() {
       });
     });
 
-    // Add sort button handlers (event delegation)
+    // Add sort button handlers
     resultsPanelContentEl.querySelectorAll('.sortBtn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const mode = btn.dataset.sort;
