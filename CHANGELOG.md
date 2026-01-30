@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.1...v1.3.2) (2026-01-30)
+
+
+### Bug Fixes
+
+* dependabot alerts ([38923c7](https://github.com/p34eu/ai-multi-model-chat/commit/38923c775649f0a61cb757919327937d53718021))
+
 ## [1.3.1](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.0...v1.3.1) (2026-01-30)
 
 
