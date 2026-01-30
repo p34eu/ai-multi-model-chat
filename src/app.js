@@ -1459,23 +1459,48 @@ function selectModel(id) {
     applyCollapseState();
   }
 
-  selectedModelInfoEl.innerHTML = `
-    <div class="modelHeader">
-      <h2>${getModelIcon(id)} ${id}</h2>
-      <button class="hideModelDetailBtn" onclick="toggleModelHidden('${id}'); selectModel('${id}');">
-        ${isHidden ? '🚫 ' + t('showModel') : '👁️ ' + t('hideModel')}
-      </button>
-    </div>
-    <div class="modelDetails">
-      <div><strong>${t("responseTime")}:</strong> ${formatCreated(
-    model?.created
-  )}</div>
-      <div><strong>${t("responseTime")}:</strong> ${
-    answer ? answer.time + " ms" : "няма"
-  }</div>
-      <div><strong>${t("question")}:</strong> <span id="selectedModelQuestion"></span></div>
-    </div>
-  `;
+  // Build modelHeader with icon and title
+  const modelHeader = document.createElement("div");
+  modelHeader.className = "modelHeader";
+  
+  const title = document.createElement("h2");
+  title.innerHTML = getModelIcon(id);
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = id;
+  title.appendChild(nameSpan);
+  
+  const hideBtn = document.createElement("button");
+  hideBtn.className = "hideModelDetailBtn";
+  hideBtn.textContent = isHidden ? '🚫 ' + t('showModel') : '👁️ ' + t('hideModel');
+  hideBtn.dataset.modelId = id;
+  hideBtn.addEventListener("click", () => {
+    toggleModelHidden(id);
+    selectModel(id);
+  });
+  
+  modelHeader.appendChild(title);
+  modelHeader.appendChild(hideBtn);
+  
+  // Build modelDetails section
+  const modelDetails = document.createElement("div");
+  modelDetails.className = "modelDetails";
+  
+  const createdDiv = document.createElement("div");
+  createdDiv.innerHTML = `<strong>${t("responseTime")}:</strong> ${formatCreated(model?.created)}`;
+  modelDetails.appendChild(createdDiv);
+  
+  const timeDiv = document.createElement("div");
+  timeDiv.innerHTML = `<strong>${t("responseTime")}:</strong> ${answer ? answer.time + " ms" : "няма"}`;
+  modelDetails.appendChild(timeDiv);
+  
+  const questionDiv = document.createElement("div");
+  questionDiv.innerHTML = `<strong>${t("question")}:</strong> <span id="selectedModelQuestion"></span>`;
+  modelDetails.appendChild(questionDiv);
+  
+  // Clear and rebuild the element
+  selectedModelInfoEl.innerHTML = "";
+  selectedModelInfoEl.appendChild(modelHeader);
+  selectedModelInfoEl.appendChild(modelDetails);
 
   // Safely set the question text to prevent HTML injection
   const questionSpan = selectedModelInfoEl.querySelector('#selectedModelQuestion');
