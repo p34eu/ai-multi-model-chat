@@ -1473,9 +1473,15 @@ function selectModel(id) {
       <div><strong>${t("responseTime")}:</strong> ${
     answer ? answer.time + " ms" : "няма"
   }</div>
-      <div><strong>${t("question")}:</strong> ${lastQuestion || "няма"}</div>
+      <div><strong>${t("question")}:</strong> <span id="selectedModelQuestion"></span></div>
     </div>
   `;
+
+  // Safely set the question text to prevent HTML injection
+  const questionSpan = selectedModelInfoEl.querySelector('#selectedModelQuestion');
+  if (questionSpan) {
+    questionSpan.textContent = lastQuestion || "няма";
+  }
 
   selectedModelAnswerEl.textContent = answer ? answer.text : t("noResponse");
 }
@@ -1787,7 +1793,7 @@ function renderComparisonTable() {
       </div>
       <div class="resultsPanelQuestion">
         <div class="resultsPanelLabel">${t("question")}</div>
-        <div class="resultsPanelText">${lastQuestion}</div>
+        <div class="resultsPanelText" id="resultsPanelQuestionText"></div>
       </div>
       <div class="resultsPanelModelList">
         <div class="resultsPanelLabel">${t("models")}</div>
@@ -1796,19 +1802,31 @@ function renderComparisonTable() {
       </div>
     `;
     
+    // Safely set the question text to prevent HTML injection
+    let questionTextEl = resultsPanelContentEl.querySelector('#resultsPanelQuestionText');
+    if (questionTextEl) {
+      questionTextEl.textContent = lastQuestion;
+    }
+    
     resultsPanelContentEl.innerHTML = `
       <div class="resultsPanelStats">
         <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
       </div>
       <div class="resultsPanelQuestion">
         <div class="resultsPanelLabel">${t("question")}</div>
-        <div class="resultsPanelText">${lastQuestion}</div>
+        <div class="resultsPanelText" id="resultsPanelQuestionText"></div>
       </div>
       <div class="resultsPanelModelList">
         <div class="resultsPanelLabel">${t("models")}</div>
         ${modelListHtml}
       </div>
     `;
+    
+    // Safely set the question text to prevent HTML injection
+    questionTextEl = resultsPanelContentEl.querySelector('#resultsPanelQuestionText');
+    if (questionTextEl) {
+      questionTextEl.textContent = lastQuestion;
+    }
     
     // Add click handlers to model list items
     resultsPanelContentEl.querySelectorAll('.modelListItem').forEach((item) => {
@@ -1972,7 +1990,13 @@ function createComparisonTable(answerSet, isSuccessful = false) {
 
     const questionBlock = document.createElement("div");
     questionBlock.className = "cardBlock visbile-sm";
-    questionBlock.innerHTML = `<div class="cardLabel visbile-sm">${t("question")}</div><div class="cardText visbile-sm">${lastQuestion}</div>`;
+    questionBlock.innerHTML = `<div class="cardLabel visbile-sm">${t("question")}</div><div class="cardText visbile-sm" id="cardQuestion"></div>`;
+    
+    // Safely set the question text to prevent HTML injection
+    const cardQuestionEl = questionBlock.querySelector('#cardQuestion');
+    if (cardQuestionEl) {
+      cardQuestionEl.textContent = lastQuestion;
+    }
 
     const answerBlock = document.createElement("div");
     answerBlock.className = "cardBlock";
