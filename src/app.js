@@ -8,6 +8,7 @@ let selectedModel = null;
 let history = JSON.parse(localStorage.getItem("chatHistory")) || []; // [{ question, answersSnapshot }]
 let currentLanguage = localStorage.getItem("language") || "bg"; // 'bg' or 'en'
 let collapsedProviders = JSON.parse(localStorage.getItem("collapsedProviders")) || {}; // provider -> boolean
+let collapsedFailedGroups = JSON.parse(localStorage.getItem("collapsedFailedGroups")) || {}; // failed group -> boolean
 let providerStatus = {}; // provider status from backend
 let modelStatuses = {}; // modelId -> { status, timestamp }
 let selectedModels = JSON.parse(localStorage.getItem("selectedModels")) || []; // array of model IDs to send to
@@ -19,6 +20,10 @@ let isResultsView = false; // Track if we're showing results
 let isSidebarCollapsed = false;
 let hasMobileInit = false;
 let resultsSort = localStorage.getItem('resultsSort') || 'time'; // 'name' or 'time' - persisted preference
+let currentChatModel = null; // model ID for chat mode
+let chatHistories = {}; // modelId -> [{role, content, time?}]
+let isChatLoading = false; // loading state for chat requests
+let currentTheme = localStorage.getItem('theme') || 'dark'; // 'dark' or 'light'
 
 // Check if on mobile device
 function isMobile() {
@@ -92,8 +97,10 @@ const translations = {
     sortBy: "Сортирай по",
     sortName: "Име",
     sortTime: "Време за отговор",
-
-  
+    openQuestionModal: "Задай въпрос",
+    selectSuccessfulNoResults: "Този бутон избира успешните модели от последните резултати. Първо заредете резултати от историята или задайте въпрос.",
+    replyBtn: "Отговори",
+    chatPlaceholder: "Напиши съобщение...",
   },
   en: {
     title: "AI Model Comparison Tool",
@@ -150,14 +157,33 @@ const translations = {
     sortBy: "Sort by",
     sortName: "Name",
     sortTime: "Response time",
-  },
-};
+    openQuestionModal: "Ask question",
+    selectSuccessfulNoResults: "This button selects successful models from the last results. Load results from history or ask a question first.",
+    replyBtn: "Reply",
+    chatPlaceholder: "Type your message..."
+  }
+}
 
 // ===============================
 // TRANSLATION FUNCTIONS
 // ===============================
 function t(key) {
   return translations[currentLanguage][key] || key;
+}
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', currentTheme);
+  applyTheme();
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  const themeBtn = document.getElementById('themeToggleBtn');
+  if (themeBtn) {
+    themeBtn.textContent = currentTheme === 'dark' ? '☀️' : '🌙';
+    themeBtn.title = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  }
 }
 
 function updateLanguage(lang) {
@@ -289,6 +315,12 @@ function applyTranslations() {
   }
   // Keep models sort buttons in sync when models are loaded
   try { updateModelsSortButtons(); } catch (e) {}
+
+  // Update modal button text
+  const openQuestionBtn = document.getElementById("openQuestionBtn");
+  if (openQuestionBtn) {
+    openQuestionBtn.textContent = t("openQuestionModal");
+  }
 }
 
 // ===============================
@@ -308,6 +340,7 @@ const resultsPanelContentEl = document.getElementById("resultsPanelContent");
 const resultsPanelTitleEl = document.getElementById("resultsPanelTitle");
 const clearResultsBtnEl = document.getElementById("clearResultsBtn");
 const toggleResultsPanelBtn = document.getElementById("toggleResultsPanelBtn");
+const chatPanelEl = document.getElementById("chatPanel");
 
 // ===============================
 // HELPERS
@@ -582,9 +615,69 @@ function renderFailedModels() {
     header.className = "failedGroupHeader";
     const headerId = `failedGroup_${type}`;
     header.id = headerId;
-    header.setAttribute('role', 'heading');
-    header.setAttribute('aria-level', '4');
-    header.textContent = `${t(`failedGroup_${type}`) || type} (${groups[type].length})`;
+    header.setAttribute('role', 'button');
+    header.setAttribute('aria-expanded', !collapsedFailedGroups[type]);
+    header.setAttribute('tabindex', '0');
+
+    const headerContent = document.createElement("div");
+    headerContent.className = "headerContent";
+
+    const headerLeft = document.createElement("div");
+    headerLeft.className = "headerLeft";
+
+    const arrow = document.createElement("span");
+    arrow.className = "expandArrow";
+    arrow.innerHTML = collapsedFailedGroups[type] ? "▶" : "▼";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "groupSelectAll";
+    checkbox.dataset.group = type;
+
+    const providerTitle = document.createElement("span");
+    providerTitle.className = "providerTitle";
+    providerTitle.textContent = `${t(`failedGroup_${type}`) || type} (${groups[type].length})`;
+
+    headerLeft.appendChild(arrow);
+    headerLeft.appendChild(checkbox);
+    headerLeft.appendChild(providerTitle);
+
+    headerContent.appendChild(headerLeft);
+    header.appendChild(headerContent);
+
+    // Set checkbox state
+    const models = groups[type].map(obj => obj.id);
+    const allSelected = models.every(id => selectedFailedModels.includes(id));
+    const someSelected = models.some(id => selectedFailedModels.includes(id));
+    checkbox.checked = allSelected;
+    checkbox.indeterminate = someSelected && !allSelected;
+
+    // Add event listeners
+    checkbox.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const group = e.target.dataset.group;
+      const models = groups[group].map(obj => obj.id);
+      if (e.target.checked) {
+        models.forEach(id => {
+          if (!selectedFailedModels.includes(id)) selectedFailedModels.push(id);
+        });
+      } else {
+        selectedFailedModels = selectedFailedModels.filter(id => !models.includes(id));
+      }
+      updateFailedModelsButtonState();
+      renderFailedModels();
+    });
+
+    header.addEventListener("click", (e) => {
+      if (e.target === checkbox || checkbox.contains(e.target)) return;
+      toggleFailedGroup(type);
+    });
+    header.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggleFailedGroup(type);
+      }
+    });
 
     groupDiv.setAttribute('role', 'group');
     groupDiv.setAttribute('aria-labelledby', headerId);
@@ -593,6 +686,10 @@ function renderFailedModels() {
     const list = document.createElement("ul");
     list.className = "failedGroupList";
     list.setAttribute('role', 'list');
+
+    if (collapsedFailedGroups[type]) {
+      list.style.display = "none";
+    }
 
     groups[type].forEach((obj) => {
       const li = document.createElement("li");
@@ -614,6 +711,7 @@ function renderFailedModels() {
           selectedFailedModels = selectedFailedModels.filter((m) => m !== obj.id);
         }
         updateFailedModelsButtonState();
+        renderFailedModels();
       };
 
       const icon = document.createElement("span");
@@ -650,6 +748,12 @@ function renderFailedModels() {
   });
 
   updateFailedModelsButtonState();
+}
+
+function toggleFailedGroup(type) {
+  collapsedFailedGroups[type] = !collapsedFailedGroups[type];
+  localStorage.setItem("collapsedFailedGroups", JSON.stringify(collapsedFailedGroups));
+  renderFailedModels();
 }
 
 function updateFailedModelsButtonState() {
@@ -1242,6 +1346,36 @@ document.getElementById("clearHistory").onclick = () => {
 // ===============================
 // HISTORY
 // ===============================
+
+// Update history with chat conversation
+function updateChatHistory(modelId) {
+  if (!chatHistories[modelId] || chatHistories[modelId].length === 0) return;
+  
+  // Build the full conversation text from chat history
+  const conversationText = chatHistories[modelId]
+    .map(msg => {
+      const label = msg.role === 'user' ? 'Q' : 'A';
+      return `**${label}:** ${msg.content}`;
+    })
+    .join('\n\n---\n\n');
+  
+  // Update the answers object with the full conversation
+  answers[modelId] = {
+    text: conversationText,
+    time: answers[modelId]?.time || 0,
+    isChat: true
+  };
+  
+  // Find and update the history entry for the current question
+  if (lastQuestion) {
+    const historyIndex = history.findIndex(h => h.question === lastQuestion);
+    if (historyIndex !== -1) {
+      history[historyIndex].answersSnapshot = { ...answers };
+      localStorage.setItem("chatHistory", JSON.stringify(history));
+    }
+  }
+}
+
 function renderHistory() {
   if (!historyListEl) {
     console.error("renderHistory: #historyList element not found");
@@ -1265,6 +1399,11 @@ function renderHistory() {
       console.debug('history click', idx, item.question, Object.keys(item.answersSnapshot || {}).length);
       lastQuestion = item.question;
       answers = { ...item.answersSnapshot };
+      
+      // Clear chat histories when loading a new question to avoid mixing conversations
+      chatHistories = {};
+      currentChatModel = null;
+      
       selectedModel = null;
 
       document
@@ -1347,6 +1486,10 @@ function selectModel(id) {
 async function askAllModels(question) {
   answers = {};
   lastQuestion = question;
+  
+  // Clear chat histories for new question to avoid mixing conversations
+  chatHistories = {};
+  currentChatModel = null;
 
   document.querySelectorAll(".modelStatus").forEach((el) => {
     el.textContent = "…";
@@ -1701,7 +1844,7 @@ function renderComparisonTable() {
 
   // Render successful answers cards
   if (Object.keys(successfulAnswers).length > 0) {
-    const table = createComparisonTable(successfulAnswers);
+    const table = createComparisonTable(successfulAnswers, true);
     comparisonTableEl.appendChild(table);
   }
 
@@ -1721,7 +1864,7 @@ function renderComparisonTable() {
     const failedContent = document.createElement("div");
     failedContent.className = "failed-content";
 
-    const failedTable = createComparisonTable(failedAnswers);
+    const failedTable = createComparisonTable(failedAnswers, false);
     failedTable.classList.add("failed-cards");
     failedContent.appendChild(failedTable);
 
@@ -1736,6 +1879,14 @@ function renderComparisonTable() {
       icon.textContent = failedSection.classList.contains("collapsed") ? "▶" : "▼";
     });
   }
+
+  // Add reply button listeners
+  comparisonTableEl.querySelectorAll('.replyBtn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const modelId = e.target.dataset.modelId;
+      enterChatMode(modelId);
+    });
+  });
 
   // No dynamic measurement needed: header is outside the scroll container and sticks under the top bar.
   if (isMobile()) {
@@ -1766,7 +1917,7 @@ function scrollToModelCard(modelId) {
   }
 }
 
-function createComparisonTable(answerSet) {
+function createComparisonTable(answerSet, isSuccessful = false) {
   const wrapper = document.createElement("div");
   wrapper.className = "resultsCards";
 
@@ -1804,6 +1955,15 @@ function createComparisonTable(answerSet) {
     meta.className = "cardMeta";
     meta.textContent = `${ans.time} ms`;
 
+    // Only add reply button for successful responses
+    if (isSuccessful) {
+      const replyBtn = document.createElement("button");
+      replyBtn.className = "replyBtn";
+      replyBtn.textContent = t("replyBtn");
+      replyBtn.dataset.modelId = id;
+      header.appendChild(replyBtn);
+    }
+
     header.appendChild(title);
     header.appendChild(meta);
 
@@ -1836,6 +1996,226 @@ function createComparisonTable(answerSet) {
   });
 
   return wrapper;
+}
+
+function enterChatMode(modelId) {
+  if (!chatHistories[modelId]) {
+    // Ensure we have the necessary data
+    if (!lastQuestion || !answers[modelId] || !answers[modelId].text) {
+      console.error('Missing data for chat mode:', { lastQuestion, modelId, hasAnswer: !!answers[modelId] });
+      return;
+    }
+    
+    chatHistories[modelId] = [
+      {role: 'user', content: lastQuestion},
+      {role: 'assistant', content: answers[modelId].text, time: answers[modelId].time}
+    ];
+  }
+  currentChatModel = modelId;
+  renderChat();
+}
+
+function renderChat() {
+  if (!currentChatModel || !chatPanelEl) return;
+
+  chatPanelEl.innerHTML = '';
+
+  const model = models.find(m => m.id === currentChatModel);
+  const providerName = model?.provider || "Unknown";
+
+  const header = document.createElement("div");
+  header.className = "chatHeader";
+
+  const title = document.createElement("h3");
+  title.innerHTML = `${getModelIcon(currentChatModel)} <span class="providerName">${providerName}</span> · <span class="modelName">${currentChatModel}</span>`;
+
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "closeChatBtn";
+  closeBtn.textContent = "✕";
+  closeBtn.onclick = () => {
+    currentChatModel = null;
+    chatPanelEl.classList.add("hidden");
+    resultsPanelEl.classList.remove("hidden");
+    
+    // Show other UI elements when exiting chat mode
+    comparisonTableEl.classList.remove("hidden");
+    if (lastQuestion && Object.keys(answers).length) {
+      document.getElementById("resultsHeader").classList.remove("hidden");
+    }
+  };
+
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const messagesEl = document.createElement("div");
+  messagesEl.className = "chatMessages";
+
+  chatHistories[currentChatModel].forEach(msg => {
+    const msgEl = document.createElement("div");
+    msgEl.className = `chatMessage ${msg.role}`;
+    msgEl.innerHTML = parseMarkdown(msg.content);
+    messagesEl.appendChild(msgEl);
+  });
+
+  // Add loading indicator if waiting for response
+  if (isChatLoading) {
+    const loadingEl = document.createElement("div");
+    loadingEl.className = "chatMessage assistant loading";
+    loadingEl.innerHTML = '<div class="loadingDots"><span></span><span></span><span></span></div>';
+    messagesEl.appendChild(loadingEl);
+  }
+
+  const inputContainer = document.createElement("div");
+  inputContainer.className = "chatInputContainer";
+
+  const inputEl = document.createElement("textarea");
+  inputEl.className = "chatInput";
+  inputEl.placeholder = t("chatPlaceholder");
+  inputEl.rows = 2;
+  inputEl.disabled = isChatLoading;
+  inputEl.onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && inputEl.value.trim() && !isChatLoading) {
+      e.preventDefault();
+      sendChatMessage(inputEl.value.trim());
+      inputEl.value = '';
+    }
+  };
+
+  const sendBtn = document.createElement("button");
+  sendBtn.className = "chatSendBtn";
+  sendBtn.textContent = "Send";
+  sendBtn.disabled = isChatLoading;
+  sendBtn.onclick = () => {
+    if (inputEl.value.trim() && !isChatLoading) {
+      sendChatMessage(inputEl.value.trim());
+      inputEl.value = '';
+    }
+  };
+
+  inputContainer.appendChild(inputEl);
+  inputContainer.appendChild(sendBtn);
+
+  chatPanelEl.appendChild(header);
+  chatPanelEl.appendChild(messagesEl);
+  chatPanelEl.appendChild(inputContainer);
+
+  chatPanelEl.classList.remove("hidden");
+  resultsPanelEl.classList.add("hidden");
+  
+  // Hide other UI elements when in chat mode
+  comparisonTableEl.classList.add("hidden");
+  selectedModelInfoEl.classList.add("hidden");
+  selectedModelAnswerEl.classList.add("hidden");
+  document.getElementById("resultsHeader").classList.add("hidden");
+  typingIndicator.classList.add("hidden");
+
+  // Scroll to bottom
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function sendChatMessage(content) {
+  const model = currentChatModel;
+  chatHistories[model].push({role: 'user', content});
+  isChatLoading = true;
+  renderChat();
+
+  // Clean messages to only include role and content (remove time and other extra fields)
+  const cleanMessages = chatHistories[model].map(msg => ({
+    role: msg.role,
+    content: msg.content
+  }));
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({messages: cleanMessages, model})
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    chatHistories[model].push({role: 'assistant', content: ''});
+    renderChat();
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let hasReceivedData = false;
+
+    // Set a timeout for the streaming response
+    const streamTimeout = setTimeout(() => {
+      if (isChatLoading) {
+        console.warn(`Stream timeout for model: ${model}`);
+        isChatLoading = false;
+        if (!hasReceivedData) {
+          // If no data was received, show an error
+          chatHistories[model][chatHistories[model].length - 1].content = '❌ **Request Timeout**\n\nThe model did not respond within the expected time. Please try again or select a different model.';
+        }
+        renderChat();
+      }
+    }, 30000); // 30 second timeout
+
+    function process({done, value}) {
+      if (done) {
+        clearTimeout(streamTimeout);
+        isChatLoading = false;
+        updateChatHistory(model);
+        renderChat();
+        return;
+      }
+
+      buffer += decoder.decode(value);
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const payload = line.replace('data: ', '').trim();
+          
+          if (payload === '[DONE]') {
+            clearTimeout(streamTimeout);
+            isChatLoading = false;
+            updateChatHistory(model);
+            renderChat();
+            return;
+          }
+
+          if (payload.startsWith('{')) {
+            try {
+              const json = JSON.parse(payload);
+              if (json.error) {
+                // Handle API errors
+                clearTimeout(streamTimeout);
+                isChatLoading = false;
+                chatHistories[model][chatHistories[model].length - 1].content = `❌ **API Error**\n\n${json.error}\n\nPlease try again or select a different model.`;
+                renderChat();
+                return;
+              }
+              if (json.token) {
+                hasReceivedData = true;
+                chatHistories[model][chatHistories[model].length - 1].content += json.token;
+                renderChat();
+              }
+            } catch (e) {
+              console.warn('Failed to parse streaming data:', payload, e);
+            }
+          }
+        }
+      }
+
+      reader.read().then(process);
+    }
+
+    reader.read().then(process);
+  }).catch(error => {
+    console.error('Chat error:', error);
+    isChatLoading = false;
+    // Add error message to chat history
+    chatHistories[model].push({
+      role: 'assistant', 
+      content: `❌ **Request Failed**\n\n${error.message}\n\nPlease try again or select a different model.`
+    });
+    renderChat();
+  });
 }
 
 // ===============================
@@ -2039,6 +2419,10 @@ document.getElementById("deselectAllBtn")?.addEventListener("click", () => {
 
 // Select successful models button
 document.getElementById("selectSuccessfulBtn")?.addEventListener("click", () => {
+  if (successfulModels.length === 0) {
+    showMessage(t("selectSuccessfulNoResults"));
+    return;
+  }
   selectSuccessfulModels();
 });
 
@@ -2116,6 +2500,7 @@ loadModels();
 loadFailedModels();
 renderHistory();
 applyTranslations();
+applyTheme(); // Apply saved theme on load
 typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
 initMobileLayout();
 
@@ -2133,6 +2518,9 @@ document.getElementById("langEn").addEventListener("click", () => {
   updateLanguage("en");
   updateLanguageButtons();
 });
+
+// Theme toggle
+document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
 
 // Question modal behavior: move the existing #questionArea into the modal on open and restore on close
 let _previousFocus = null;

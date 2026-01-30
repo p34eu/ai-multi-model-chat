@@ -26,12 +26,12 @@ const PROVIDERS = {
       return !!process.env.GROQ_API_KEY;
     },
     modelPrefix: "groq-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("groq-", ""), // Remove prefix for API call
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
   },
   openai: {
@@ -46,12 +46,12 @@ const PROVIDERS = {
       return !!process.env.OPENAI_API_KEY;
     },
     modelPrefix: "openai-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("openai-", ""), // Remove prefix for API call
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
   },
   anthropic: {
@@ -66,13 +66,13 @@ const PROVIDERS = {
       return !!process.env.ANTHROPIC_API_KEY;
     },
     modelPrefix: "anthropic-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("anthropic-", ""),
       max_tokens: 4096,
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
     headers: {
       "anthropic-version": "2023-06-01",
@@ -91,12 +91,11 @@ const PROVIDERS = {
       return !!process.env.GOOGLE_API_KEY;
     },
     modelPrefix: "google-",
-    formatMessage: (message, model) => ({
-      contents: [
-        {
-          parts: [{ text: message.trim() }],
-        },
-      ],
+    formatMessage: (messages, model) => ({
+      contents: messages.map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{text: m.content}]
+      })),
       generationConfig: {
         temperature: 0.8,
         topP: 0.9,
@@ -116,12 +115,12 @@ const PROVIDERS = {
       return !!process.env.MISTRAL_API_KEY;
     },
     modelPrefix: "mistral-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("mistral-", ""),
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
   },
   cohere: {
@@ -136,9 +135,9 @@ const PROVIDERS = {
       return !!process.env.COHERE_API_KEY;
     },
     modelPrefix: "cohere-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("cohere-", ""),
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
       temperature: 0.8,
       stream: true,
     }),
@@ -155,12 +154,12 @@ const PROVIDERS = {
       return !!process.env.DEEPSEEK_API_KEY;
     },
     modelPrefix: "deepseek-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("deepseek-", ""),
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
   },
   openrouter: {
@@ -175,12 +174,12 @@ const PROVIDERS = {
       return !!process.env.OPENROUTER_API_KEY;
     },
     modelPrefix: "openrouter-",
-    formatMessage: (message, model) => ({
+    formatMessage: (messages, model) => ({
       model: model.replace("openrouter-", ""),
       stream: true,
       temperature: 0.8,
       top_p: 0.9,
-      messages: [{ role: "user", content: message.trim() }],
+      messages: messages,
     }),
     headers: {
       "HTTP-Referer": process.env.APP_URL || "http://localhost",
@@ -199,8 +198,8 @@ const PROVIDERS = {
       return !!process.env.HUGGINGFACE_API_KEY;
     },
     modelPrefix: "huggingface-",
-    formatMessage: (message, model) => ({
-      inputs: message.trim(),
+    formatMessage: (messages, model) => ({
+      inputs: messages.filter(m => m.role === 'user').map(m => m.content).join('\n'),
       parameters: {
         temperature: 0.8,
         top_p: 0.9,
@@ -227,6 +226,7 @@ function getProviderFromModel(model) {
 // Helper function to handle different streaming formats
 function handleStreamingResponse(provider, response, res) {
   let buffer = "";
+  console.log(`Starting streaming response for provider: ${provider.name}`);
 
   if (provider.name === "Google AI") {
     // Handle Google AI streaming format
@@ -250,6 +250,7 @@ function handleStreamingResponse(provider, response, res) {
             data.candidates[0]?.content?.parts?.[0]?.text
           ) {
             const token = data.candidates[0].content.parts[0].text;
+            console.log(`Sending Google AI token: ${token.substring(0, 50)}...`);
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
         } catch (parseErr) {
@@ -272,6 +273,7 @@ function handleStreamingResponse(provider, response, res) {
         const payload = line.replace("data: ", "").trim();
 
         if (payload === "[DONE]") {
+          console.log("Anthropic stream completed");
           res.write("data: [DONE]\n\n");
           return res.end();
         }
@@ -281,6 +283,7 @@ function handleStreamingResponse(provider, response, res) {
         try {
           const json = JSON.parse(payload);
           if (json.delta?.text) {
+            console.log(`Sending Anthropic token: ${json.delta.text.substring(0, 50)}...`);
             res.write(
               `data: ${JSON.stringify({ token: json.delta.text })}\n\n`
             );
@@ -317,12 +320,14 @@ function handleStreamingResponse(provider, response, res) {
             const json = JSON.parse(data);
             const token = json?.delta?.message?.content?.text;
             if (token) {
+              console.log(`Sending Cohere token: ${token.substring(0, 50)}...`);
               res.write(`data: ${JSON.stringify({ token })}\n\n`);
             }
           } catch (parseErr) {
             continue;
           }
         } else if (data === "[DONE]") {
+          console.log("Cohere stream completed");
           res.write("data: [DONE]\n\n");
           return res.end();
         }
@@ -342,8 +347,10 @@ function handleStreamingResponse(provider, response, res) {
         try {
           const json = JSON.parse(line);
           if (json.token && json.token.text) {
+            console.log(`Sending Hugging Face token: ${json.token.text.substring(0, 50)}...`);
             res.write(`data: ${JSON.stringify({ token: json.token.text })}\n\n`);
           } else if (json.generated_text) {
+            console.log("Hugging Face stream completed");
             res.write("data: [DONE]\n\n");
             return res.end();
           }
@@ -368,6 +375,7 @@ function handleStreamingResponse(provider, response, res) {
         const payload = line.replace("data: ", "").trim();
 
         if (payload === "[DONE]") {
+          console.log("Default stream completed");
           res.write("data: [DONE]\n\n");
           return res.end();
         }
@@ -381,6 +389,7 @@ function handleStreamingResponse(provider, response, res) {
           const json = JSON.parse(payload);
           const token = json?.choices?.[0]?.delta?.content;
           if (token) {
+            console.log(`Sending default token: ${token.substring(0, 50)}...`);
             res.write(`data: ${JSON.stringify({ token })}\n\n`);
           }
         } catch (parseErr) {
@@ -391,7 +400,10 @@ function handleStreamingResponse(provider, response, res) {
     });
   }
 
-  response.body.on("end", () => res.end());
+  response.body.on("end", () => {
+    console.log("Provider response stream ended");
+    res.end();
+  });
   response.body.on("error", (err) => {
     console.error("Stream error:", err);
     res.end();
@@ -399,15 +411,21 @@ function handleStreamingResponse(provider, response, res) {
 }
 
 router.post("/", async (req, res) => {
-  const { message, model } = req.body;
+  const { messages, model } = req.body;
 
-  if (!message || !model) {
-    return res.status(400).json({ error: "Missing message or model" });
+  if (!messages || !model) {
+    return res.status(400).json({ error: "Missing messages or model" });
+  }
+
+  let msgs = messages;
+  if (!Array.isArray(messages)) {
+    msgs = [{role: 'user', content: messages}];
   }
 
   if (
-    typeof message !== "string" ||
-    message.trim().length === 0 ||
+    !msgs.length ||
+    typeof msgs[0].content !== "string" ||
+    msgs[0].content.trim().length === 0 ||
     typeof model !== "string"
   ) {
     return res.status(400).json({ error: "Invalid message or model format" });
@@ -450,7 +468,7 @@ router.post("/", async (req, res) => {
       headers["Authorization"] = `Bearer ${provider.apiKey}`;
     }
 
-    const requestBody = provider.formatMessage(message, model);
+    const requestBody = provider.formatMessage(msgs, model);
 
     const response = await fetch(url, {
       method: "POST",
