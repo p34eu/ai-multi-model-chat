@@ -268,7 +268,7 @@ function applyTranslations() {
     resultsPanelTitleEl.textContent = t("comparisonTitle");
   }
   if (clearResultsBtnEl) {
-    clearResultsBtnEl.textContent = t("clearResults");
+    clearResultsBtnEl.title = t("clearResults");
   }
 
   // Update selected model info
@@ -1194,7 +1194,7 @@ function renderModelList() {
         // Show inactive message
         const inactiveMsg = document.createElement("div");
         inactiveMsg.className = "inactiveMessage";
-        inactiveMsg.innerHTML = `<span class="inactiveIcon">🔒</span> Add <code>${providerName.toUpperCase()}_API_KEY</code> to .env file to enable this provider`;
+        inactiveMsg.innerHTML = `<span class="inactiveIcon">🔒</span> inactive.`;
         modelsContainer.appendChild(inactiveMsg);
       } else {
               // Show active models (sort within provider according to resultsSort)
@@ -1805,14 +1805,14 @@ function renderComparisonTable() {
     `;
 
     // Build the safe HTML structure
-    resultsPanelContentEl.innerHTML = `
-      <div class="resultsPanelStats">
-        <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
-      </div>
-      <div class="resultsPanelQuestion">
+    resultsPanelContentEl.innerHTML = `<div class="resultsPanelQuestion">
         <div class="resultsPanelLabel">${t("question")}</div>
         <div class="resultsPanelText" id="resultsPanelQuestionText"></div>
       </div>
+      <div class="resultsPanelStats">
+        <div class="resultsPanelCounts">${successCount} ${t("successfulResponses")} • ${failedCount} ${t("failedResponses")}</div>
+      </div>
+   
       <div class="resultsPanelModelList">
         <div class="resultsPanelLabel">${t("models")}</div>
         <div class="sortControls">

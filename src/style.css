@@ -115,6 +115,7 @@ textarea:focus {
 html,
 body {
   height: 100%;
+  font-size: 12px;
 }
 
 body {
@@ -386,16 +387,15 @@ button:hover {
   overflow: auto;
 }
 
-.resultsPanelHeader {
+.resultsPanelLabel {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.resultsPanelHeader h3 {
-  margin: 0;
-  font-size: 14px;
+.resultsPanelTitle h3 {
+  margin: 0;   
 }
 
 .resultsPanelActions {
@@ -430,10 +430,12 @@ button:hover {
 }
 
 .resultsPanelLabel {
-  font-size: 11px;
+  display:flex;
+  flex-direction:row;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
+      align-items: center;
   margin-bottom: 6px;
 }
 
