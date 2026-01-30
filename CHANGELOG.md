@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.0...v1.3.1) (2026-01-30)
+
+
+### Bug Fixes
+
+* code scanning alerts ([b0faa1c](https://github.com/p34eu/ai-multi-model-chat/commit/b0faa1c234860a13a5fa4cee99b02119de4f25a1))
+
 # [1.3.0](https://github.com/p34eu/ai-multi-model-chat/compare/v1.2.0...v1.3.0) (2026-01-30)
 
 
