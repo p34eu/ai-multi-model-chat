@@ -1486,11 +1486,17 @@ function selectModel(id) {
   modelDetails.className = "modelDetails";
   
   const createdDiv = document.createElement("div");
-  createdDiv.innerHTML = `<strong>${t("responseTime")}:</strong> ${formatCreated(model?.created)}`;
+  createdDiv.innerHTML = `<strong>${t("responseTime")}:</strong> `;
+  const createdSpan = document.createElement("span");
+  createdSpan.textContent = formatCreated(model?.created);
+  createdDiv.appendChild(createdSpan);
   modelDetails.appendChild(createdDiv);
   
   const timeDiv = document.createElement("div");
-  timeDiv.innerHTML = `<strong>${t("responseTime")}:</strong> ${answer ? answer.time + " ms" : "няма"}`;
+  timeDiv.innerHTML = `<strong>${t("responseTime")}:</strong> `;
+  const timeSpan = document.createElement("span");
+  timeSpan.textContent = answer ? answer.time + " ms" : "няма";
+  timeDiv.appendChild(timeSpan);
   modelDetails.appendChild(timeDiv);
   
   const questionDiv = document.createElement("div");
