@@ -57,6 +57,7 @@ const translations = {
     loaded3: " доставчици",
     forcedSuffix: "(принудително)",
     openQuestionModal: "Нов въпрос",
+    questionSentWait: "Въпросът е изпратен — моля изчакайте отговорите",
     sortBy: "Сортиране по",
     sortName: "Име",
     sortTime: "Време",
@@ -2431,7 +2432,8 @@ async function sendMessage() {
   if (!text || !models.length) return;
 
   // Clear input and close the modal immediately so the UI isn't blocked
-  // while askAllModels performs network requests.
+  // while askAllModels performs network requests. Start askAllModels
+  // asynchronously so the browser can repaint and the toast is visible.
   messageInput.value = "";
   try {
     if (questionModal && !questionModal.classList.contains('hidden')) {
@@ -2439,12 +2441,20 @@ async function sendMessage() {
     }
   } catch (e) {}
 
-  await askAllModels(text);
+  // Show a toast so the user knows the question was sent
+  try { showMessage(t(questionSentWait) || "Question sent — please wait for answers", 3000); } catch (e) {}
+
+  // Run askAllModels without awaiting to avoid blocking UI repaint
+  askAllModels(text).catch((err) => console.error(err));
 }
 
 sendBtn.onclick = sendMessage;
 messageInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+  // Submit on Enter (without Shift) and prevent inserting a newline.
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
 });
 
  
@@ -2574,6 +2584,12 @@ document.getElementById("restoreSelectedFailedBtn")?.addEventListener("click", (
 // Prevent form submission
 document.getElementById("questionArea").addEventListener("submit", (e) => {
   e.preventDefault();
+  // Close modal immediately so the UI isn't blocked while network requests run
+  try {
+    if (questionModal && !questionModal.classList.contains('hidden')) {
+      closeQuestionModal();
+    }
+  } catch (err) {}
   sendMessage();
 });
 
@@ -2672,7 +2688,7 @@ document.getElementById("langEn").addEventListener("click", () => {
 });
 
 // Theme toggle
-document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
+// Listener attached on DOMContentLoaded to ensure the button exists and icon initializes
 
 // Question modal behavior: move the existing #questionArea into the modal on open and restore on close
 let _previousFocus = null;
@@ -2739,6 +2755,17 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   if (overlay) overlay.addEventListener('click', () => closeQuestionModal());
+
+  // Ensure the theme button is initialized after DOM is ready so the icon updates correctly
+  try {
+    applyTheme();
+    const themeBtnEl = document.getElementById("themeToggleBtn");
+    if (themeBtnEl) {
+      // Remove existing listener if any to avoid duplicate handlers
+      themeBtnEl.replaceWith(themeBtnEl.cloneNode(true));
+      document.getElementById("themeToggleBtn")?.addEventListener("click", toggleTheme);
+    }
+  } catch (e) {}
 
   // Always move question area into modal so it is hidden by default
   try {
