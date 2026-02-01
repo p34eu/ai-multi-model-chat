@@ -24,7 +24,7 @@ let currentChatModel = null; // model ID for chat mode
 let chatHistories = {}; // modelId -> [{role, content, time?}]
 let isChatLoading = false; // loading state for chat requests
 let currentTheme = localStorage.getItem('theme') || 'dark'; // Available: 'dark', 'light', 'blue', 'ocean', 'sunset', 'nature', 'purple'
-const availableThemes = ['dark', 'light', 'blue', 'ocean', 'sunset', 'nature', 'purple'];
+const availableThemes = ['dark', 'light', 'light-blue', 'light-mint', 'light-purple', 'light-rose', 'blue', 'ocean', 'sunset', 'nature', 'purple'];
 
 // Check if on mobile device
 function isMobile() {
@@ -37,13 +37,16 @@ function isMobile() {
 
 const translations = {
   bg: {
-    messagePlaceholder: "Задай вопрос...",
+    messagePlaceholder: "Задай въпрос...",
     sendButton: "Изпрати",
     ask: "Попитай",
-    models: "Модели",
+    selected: "Избрани",
+    modelsTab: "Модели",
+    model: "модел",
+    models: "модела",
     history: "История",
-    failedModels: "Неработещи модели",
-    refreshFailed: "Освежи неработещи модели",
+    failedModels: "Неработещи",
+    refreshFailed: "Презареди отаказали модели",
     restoreModel: "Възстанови модел",
     typing: "Пише...",
     comparisonTitle: "Сравнение на отговори",
@@ -52,7 +55,7 @@ const translations = {
     responseTime: "Време за отговор",
     question: "Въпрос",
     noResponse: "Този модел не е отговорил.",
-    loaded1: "Заредени ",
+    loaded1: "Заредени: ",
     loaded2: " модела от ",
     loaded3: " доставчици",
     forcedSuffix: "(принудително)",
@@ -62,30 +65,39 @@ const translations = {
     sortName: "Име",
     sortTime: "Време",
     of: "от",
-    models: "Модели",
+    models: "модела",
     successfulResponses: "успешни отговори",
-    failedResponses: "неработещи отговори",
+    failedResponses: "неуспешни отговори",
     replyBtn: "Отговори",
-    clearAllFailed: "Очисти всички неработещи модели",
-    allFailedCleared: "Всички неработещи модели бяха очистени",
+    clearAllFailed: "Изпразни списъка с неработещи модели",
+    allFailedCleared: "Всички неработещи модели бяха изчистени",
     selectSuccessfulNoResults: "Няма успешни модели за избор",
-    failedGroup_quota_exceeded: "Квота превишена",
-    failedGroup_timeout: "Timeout",
-    failedGroup_network_error: "Мрежна грешка",
+    noAnswersYet: "Няма отговори още - първо задайте въпрос",
+    failedGroup_quota_exceeded: "Превишена квота",
+    failedGroup_timeout: "Изтекло време",
+    failedGroup_network_error: "Грешка в мрежата",
     failedGroup_api_error: "API грешка",
     failedGroup_internal_error: "Вътрешна грешка",
     failedGroup_user_deselect: "Премахнати от потребител",
-    failedGroup_unknown: "Неизвестно",
+    failedGroup_unknown: "Неизвестна грешка",
+    failedGroup_inactive_providers: "Недостъпни доставчици",
     showModel: "Покажи модел",
     hideModel: "Скрий модел",
+    appTitle: "Сравнение на AI модели",
+    appSubtitle: "Изберете  модел(и) от менюто с доставчици и задайте въпрос за сравнение на отговорите.",
+    appAdvice: "* За най-добри резултати, задавайте ясни и конкретни въпроси. \n* Избягвайте лични данни и чувствителна информация.\n* Конфиденциалността зависи от политиките на доставчиците на  ИИ модели.\n",
     chatPlaceholder: "Пиши съобщение...",
-    resetCacheSuccess: "Кешът е успешно очищен",
+    resetCacheSuccess: "Кешът е успешно изчистен",
     noModelsSelected: "Моля, избери поне един модел",
     removeModel: "Премахни модел",
-    removeModelConfirm: "Да добавя ли този модел към неработещите?",
+    removeModelConfirm: "Да се добави ли този модел към неработещите?",
     removeModelDone: "Моделът беше добавен към неработещите",
     themeDark: "Тъмна",
     themeLight: "Светла",
+    themeLightBlue: "Светла - Синя",
+    themeLightMint: "Светла - Мента",
+    themeLightPurple: "Светла - Лилава",
+    themeLightRose: "Светла - Розово",
     themeBlue: "Синя",
     themeOcean: "Океан",
     themeSunset: "Залез",
@@ -96,9 +108,12 @@ const translations = {
     messagePlaceholder: "Ask a question...",
     sendButton: "Send",
     ask: "Ask",
+    selected: "Selected",
+    modelsTab: "Models",
+    model: "model",
     models: "Models",
     history: "History",
-    failedModels: "Failed Models",
+    failedModels: "Inactive",
     refreshFailed: "Refresh failed models",
     restoreModel: "Restore model",
     typing: "Typing...",
@@ -124,6 +139,7 @@ const translations = {
     clearAllFailed: "Clear all failed models",
     allFailedCleared: "All failed models have been cleared",
     selectSuccessfulNoResults: "No successful models to select",
+    noAnswersYet: "No answers yet - ask a question first",
     failedGroup_quota_exceeded: "Quota exceeded",
     failedGroup_timeout: "Timeout",
     failedGroup_network_error: "Network error",
@@ -131,8 +147,12 @@ const translations = {
     failedGroup_internal_error: "Internal error",
     failedGroup_user_deselect: "Deselected by user",
     failedGroup_unknown: "Unknown",
+    failedGroup_inactive_providers: "Unavailable Providers",
     showModel: "Show model",
     hideModel: "Hide model",
+    appTitle: "AI Multi Chat",
+    appSubtitle: "Select models and ask a question to compare responses",
+    appAdvice: "* Write questions in natural language. \n*  Avoid personal data and sensitive information.\n* Confidentiality depends on the policies of AI model providers.",
     chatPlaceholder: "Type a message...",
     resetCacheSuccess: "Cache successfully cleared",
     noModelsSelected: "Please select at least one model",
@@ -141,6 +161,10 @@ const translations = {
     removeModelDone: "Model added to failed models",
     themeDark: "Dark",
     themeLight: "Light",
+    themeLightBlue: "Light - Blue",
+    themeLightMint: "Light - Mint",
+    themeLightPurple: "Light - Purple",
+    themeLightRose: "Light - Rose",
     themeBlue: "Blue",
     themeOcean: "Ocean",
     themeSunset: "Sunset",
@@ -167,6 +191,13 @@ if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
   // Will be set after models are loaded
 }
 
+  // Update document title and main title
+  document.title = t("appTitle");
+  const titleEl = document.getElementById("title");
+  if (titleEl) {
+    titleEl.textContent = t("appTitle");
+  }
+
   // Update placeholders
   document.querySelector("#message").placeholder = t("messagePlaceholder");
 
@@ -174,6 +205,9 @@ if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
 
   document.querySelectorAll('span[data-i18n="models"]').forEach((el) => {
     el.textContent = t("models");
+  });
+  document.querySelectorAll('span[data-i18n="modelsTab"]').forEach((el) => {
+    el.textContent = t("modelsTab");
   });
   document.querySelectorAll('span[data-i18n="history"]').forEach((el) => {
     el.textContent = t("history");
@@ -261,6 +295,12 @@ if (Object.keys(collapsedProviders).length === 0 && isMobile()) {
 
   // Update button states with proper translations and model counts
   try { updateQuestionButtonState(); } catch (e) {}
+
+  // Re-render failed models to update translations
+  renderFailedModels();
+
+  // Re-render comparison table to show subtitle if needed
+  renderComparisonTable();
 }
 
 // ===============================
@@ -275,6 +315,7 @@ const typingIndicator = document.getElementById("typingIndicator");
 const selectedModelInfoEl = document.getElementById("selectedModelInfo");
 const selectedModelAnswerEl = document.getElementById("selectedModelAnswer");
 const comparisonTableEl = document.getElementById("comparisonTable");
+const welcomeMessageEl = document.getElementById("welcomeMessage");
 const resultsPanelEl = document.getElementById("resultsPanel");
 const resultsPanelContentEl = document.getElementById("resultsPanelContent");
 const resultsPanelTitleEl = document.getElementById("resultsPanelTitle");
@@ -519,7 +560,11 @@ function renderFailedModels() {
 
   failedModelsListEl.innerHTML = "";
 
-  if (failedModelsList.length === 0) {
+  // Get inactive providers (those with no models)
+  const allProviderNames = Object.keys(providerStatus).sort();
+  const inactiveProviders = allProviderNames.filter((p) => providerStatus[p].modelCount === 0);
+
+  if (failedModelsList.length === 0 && inactiveProviders.length === 0) {
     const li = document.createElement("li");
     li.className = "emptyPlaceholder";
     li.textContent = "No failed models";
@@ -537,7 +582,16 @@ function renderFailedModels() {
     groups[type].push(obj);
   });
 
-  Object.keys(groups).forEach((type) => {
+  // Add inactive providers group if any
+  if (inactiveProviders.length > 0) {
+    groups["inactive_providers"] = inactiveProviders.map(p => ({ id: p, errorType: "inactive_providers" }));
+  }
+
+  Object.keys(groups).sort((a, b) => {
+    if (a === "inactive_providers") return 1;
+    if (b === "inactive_providers") return -1;
+    return a.localeCompare(b);
+  }).forEach((type) => {
     const groupDiv = document.createElement("li");
     groupDiv.className = "failedModelGroup";
     
@@ -559,44 +613,51 @@ function renderFailedModels() {
     arrow.className = "expandArrow";
     arrow.innerHTML = collapsedFailedGroups[type] ? "▶" : "▼";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "groupSelectAll";
-    checkbox.dataset.group = type;
+    let checkbox = null;
+    if (type !== "inactive_providers") {
+      checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "groupSelectAll";
+      checkbox.dataset.group = type;
+    }
 
     const providerTitle = document.createElement("span");
     providerTitle.className = "providerTitle";
     providerTitle.textContent = `${t(`failedGroup_${type}`) || type} (${groups[type].length})`;
 
     headerLeft.appendChild(arrow);
-    headerLeft.appendChild(checkbox);
+    if (checkbox) {
+      headerLeft.appendChild(checkbox);
+    }
     headerLeft.appendChild(providerTitle);
 
     headerContent.appendChild(headerLeft);
     header.appendChild(headerContent);
 
     // Set checkbox state
-    const models = groups[type].map(obj => obj.id);
-    const allSelected = models.every(id => selectedFailedModels.includes(id));
-    const someSelected = models.some(id => selectedFailedModels.includes(id));
-    checkbox.checked = allSelected;
-    checkbox.indeterminate = someSelected && !allSelected;
+    if (checkbox) {
+      const models = groups[type].map(obj => obj.id);
+      const allSelected = models.every(id => selectedFailedModels.includes(id));
+      const someSelected = models.some(id => selectedFailedModels.includes(id));
+      checkbox.checked = allSelected;
+      checkbox.indeterminate = someSelected && !allSelected;
 
-    // Add event listeners
-    checkbox.addEventListener('change', (e) => {
-      e.stopPropagation();
-      const group = e.target.dataset.group;
-      const models = groups[group].map(obj => obj.id);
-      if (e.target.checked) {
-        models.forEach(id => {
-          if (!selectedFailedModels.includes(id)) selectedFailedModels.push(id);
-        });
-      } else {
-        selectedFailedModels = selectedFailedModels.filter(id => !models.includes(id));
-      }
-      updateFailedModelsButtonState();
-      renderFailedModels();
-    });
+      // Add event listeners
+      checkbox.addEventListener('change', (e) => {
+        e.stopPropagation();
+        const group = e.target.dataset.group;
+        const models = groups[group].map(obj => obj.id);
+        if (e.target.checked) {
+          models.forEach(id => {
+            if (!selectedFailedModels.includes(id)) selectedFailedModels.push(id);
+          });
+        } else {
+          selectedFailedModels = selectedFailedModels.filter(id => !models.includes(id));
+        }
+        updateFailedModelsButtonState();
+        renderFailedModels();
+      });
+    }
 
     header.addEventListener("click", (e) => {
       if (e.target === checkbox || checkbox.contains(e.target)) return;
@@ -626,24 +687,27 @@ function renderFailedModels() {
       li.className = "failedModelItem";
       li.setAttribute('role', 'listitem');
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.className = "failedModelCheckbox";
-      checkbox.value = obj.id;
-      checkbox.checked = selectedFailedModels.includes(obj.id);
-      checkbox.setAttribute('aria-label', obj.id);
-      checkbox.onchange = (e) => {
-        e.stopPropagation();
-        if (e.target.checked) {
-          if (!selectedFailedModels.includes(obj.id)) selectedFailedModels.push(obj.id);
-        } else {
-          selectedFailedModels = selectedFailedModels.filter((m) => m !== obj.id);
-        }
-        updateFailedModelsButtonState();
-        renderFailedModels();
-      };
+      if (type !== "inactive_providers") {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "failedModelCheckbox";
+        checkbox.value = obj.id;
+        checkbox.checked = selectedFailedModels.includes(obj.id);
+        checkbox.setAttribute('aria-label', obj.id);
+        checkbox.onchange = (e) => {
+          e.stopPropagation();
+          if (e.target.checked) {
+            if (!selectedFailedModels.includes(obj.id)) selectedFailedModels.push(obj.id);
+          } else {
+            selectedFailedModels = selectedFailedModels.filter((m) => m !== obj.id);
+          }
+          updateFailedModelsButtonState();
+          renderFailedModels();
+        };
 
-      li.appendChild(checkbox);
+        li.appendChild(checkbox);
+      }
+
       const modelNameSpan = document.createElement("span");
       modelNameSpan.className = "failedModelName";
       modelNameSpan.textContent = obj.id;
@@ -1039,7 +1103,7 @@ function updateSelectionCount() {
       if (isModelUserHidden(m.id)) return false; // Skip user-hidden models
       return true;
     });
-    countEl.textContent = `${selectedModels.length}/${visibleModels.length}`;
+    countEl.textContent = `${t("selected")}: ${selectedModels.length} ${t("of")} ${visibleModels.length}`;
   }
   // Update question button state
   updateQuestionButtonState();
@@ -1055,8 +1119,10 @@ function updateQuestionButtonState() {
   
   const icon = "✉️";
   if (hasSelected) {
-    btn.innerHTML = `${icon} ${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
-    btn.title = `${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
+    const count = selectedModels.length;
+    const modelWord = count === 1 ? t("model") : t("models");
+    btn.innerHTML = `${icon} ${t("ask")} ${count} ${modelWord.toLowerCase()}`;
+    btn.title = `${t("ask")} ${count} ${modelWord.toLowerCase()}`;
   } else {
     btn.innerHTML = `${icon} ${t("openQuestionModal")}`;
     btn.title = t("noModelsSelected");
@@ -1066,10 +1132,20 @@ function updateQuestionButtonState() {
   const sendBtn = document.getElementById("sendBtn");
   if (sendBtn) {
     if (hasSelected) {
-      sendBtn.textContent = `${t("ask")} ${selectedModels.length} ${t("models").toLowerCase()}`;
+      const count = selectedModels.length;
+      const modelWord = count === 1 ? t("model") : t("models");
+      sendBtn.textContent = `${t("ask")} ${count} ${modelWord.toLowerCase()}`;
     } else {
       sendBtn.textContent = t("sendButton");
     }
+  }
+
+  // Update selectSuccessfulBtn state
+  const selectSuccessfulBtn = document.getElementById("selectSuccessfulBtn");
+  if (selectSuccessfulBtn) {
+    // Always enable the button so users can see appropriate messages
+    selectSuccessfulBtn.classList.remove("disabled");
+    selectSuccessfulBtn.disabled = false;
   }
 }
 
@@ -1108,41 +1184,26 @@ function renderModelList() {
     grouped[provider].push(m);
   });
 
-  // Show all providers (active first, then inactive) with a visual separator
+  // Show only providers with models
   const allProviderNames = Object.keys(providerStatus).sort();
   const activeProviders = allProviderNames.filter((p) => {
     const s = providerStatus[p];
-    return s && s.enabled && s.hasApiKey;
+    return s && s.modelCount > 0;
   });
-  const inactiveProviders = allProviderNames.filter((p) => !activeProviders.includes(p));
-  const orderedProviders = [...activeProviders, ...inactiveProviders];
+  const orderedProviders = activeProviders;
 
   orderedProviders.forEach((providerName, idx) => {
-    // Insert a separator before the first inactive provider
-    if (idx === activeProviders.length && inactiveProviders.length > 0) {
-      const sepLi = document.createElement('li');
-      sepLi.className = 'providerSeparator';
-      const sepDiv = document.createElement('div');
-      sepDiv.className = 'separatorText';
-      sepDiv.textContent = 'Inactive providers';
-      sepLi.appendChild(sepDiv);
-      modelListEl.appendChild(sepLi);
-    }
       const list = grouped[providerName] || [];
       const status = providerStatus[providerName];
-      const isActive = status && status.enabled && status.hasApiKey;
+      const isActive = true; // since we filtered to active only
 
       // Create collapsible provider group as an <li> so it is a proper child of the #modelList <ul>
       const providerGroup = document.createElement("li");
-      providerGroup.className = isActive
-        ? "providerGroup"
-        : "providerGroup inactive";
+      providerGroup.className = "providerGroup";
       providerGroup.dataset.provider = providerName;
 
       const header = document.createElement("div");
-      header.className = isActive
-        ? "modelGroupHeader"
-        : "modelGroupHeader inactive";
+      header.className = "modelGroupHeader";
       header.setAttribute("role", "button");
       header.setAttribute("aria-expanded", !collapsedProviders[providerName]);
       header.setAttribute("tabindex", "0");
@@ -1167,61 +1228,52 @@ function renderModelList() {
       const headerRight = document.createElement("div");
       headerRight.className = "headerRight";
 
-      // For inactive providers show only a grayed badge (no interactive controls)
-      let providerHideBtn = null;
-      if (isActive) {
-        const providerModels = list || [];
-        const selectedCount = providerModels.filter(m => isModelSelected(m.id) && !isModelUserHidden(m.id)).length;
-        const activeCount = providerModels.filter(m => !shouldHideModel(m.id) && !isModelUserHidden(m.id)).length;
-        const totalCount = providerModels.length;
+      // Show controls
+      const providerModels = list || [];
+      const selectedCount = providerModels.filter(m => isModelSelected(m.id) && !isModelUserHidden(m.id)).length;
+      const activeCount = providerModels.filter(m => !shouldHideModel(m.id) && !isModelUserHidden(m.id)).length;
+      const totalCount = providerModels.length;
 
-        const countsSpan = document.createElement("span");
-        countsSpan.className = "providerCounts";
-        countsSpan.innerHTML = `(${selectedCount}) • (${activeCount}) ${t("of")} (${totalCount})`;
-        countsSpan.style.cursor = 'pointer';
-        countsSpan.title = `Selected: ${selectedCount}, Active: ${activeCount}, Total: ${totalCount}`;
-        countsSpan.addEventListener('click', (e) => {
-          e.stopPropagation();
-          toggleSelectProvider(providerName);
-        });
+      const countsSpan = document.createElement("span");
+      countsSpan.className = "providerCounts";
+      countsSpan.innerHTML = `(${selectedCount}) • (${activeCount}) ${t("of")} (${totalCount})`;
+      countsSpan.style.cursor = 'pointer';
+      countsSpan.title = `Selected: ${selectedCount}, Active: ${activeCount}, Total: ${totalCount}`;
+      countsSpan.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSelectProvider(providerName);
+      });
 
-        // Hide provider button
-        providerHideBtn = document.createElement("button");
-        providerHideBtn.className = "providerHideBtn";
-        providerHideBtn.title = isProviderHidden(providerName) ? t("showModel") : t("hideModel");
-        providerHideBtn.innerHTML = isProviderHidden(providerName) ? "🚫" : "👁️";
-        providerHideBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          toggleProviderHidden(providerName);
-        });
+      // Hide provider button
+      const providerHideBtn = document.createElement("button");
+      providerHideBtn.className = "providerHideBtn";
+      providerHideBtn.title = isProviderHidden(providerName) ? t("showModel") : t("hideModel");
+      providerHideBtn.innerHTML = isProviderHidden(providerName) ? "🚫" : "👁️";
+      providerHideBtn.style.display = collapsedProviders[providerName] ? "none" : "inline-flex";
+      providerHideBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleProviderHidden(providerName);
+      });
 
-        headerRight.appendChild(countsSpan);
-        headerRight.appendChild(providerHideBtn);
-      } else {
-        const inactiveLabel = document.createElement("span");
-        inactiveLabel.className = "inactiveBadge";
-        inactiveLabel.textContent = '⚠ No API Key';
-        headerRight.appendChild(inactiveLabel);
-      }
+      headerRight.appendChild(countsSpan);
+      headerRight.appendChild(providerHideBtn);
 
       headerContent.appendChild(headerLeft);
       headerContent.appendChild(headerRight);
       header.appendChild(headerContent);
 
-      // Toggle collapse on click for active providers only
-      if (isActive) {
-        header.addEventListener("click", (e) => {
-          // If clicked on the hide button (handled above), ignore
-          if (e.target === providerHideBtn || (e.target && providerHideBtn && providerHideBtn.contains && providerHideBtn.contains(e.target))) return;
+      // Toggle collapse on click
+      header.addEventListener("click", (e) => {
+        // If clicked on the hide button (handled above), ignore
+        if (e.target === providerHideBtn || (e.target && providerHideBtn && providerHideBtn.contains && providerHideBtn.contains(e.target))) return;
+        toggleProvider(providerName);
+      });
+      header.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
           toggleProvider(providerName);
-        });
-        header.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggleProvider(providerName);
-          }
-        });
-      }
+        }
+      });
 
       // Use a nested <ul> for the provider models so screen readers announce them as lists
       const modelsContainer = document.createElement("ul");
@@ -1346,15 +1398,18 @@ function toggleProvider(providerName) {
     const header = providerGroup.querySelector(".modelGroupHeader");
     const arrow = header.querySelector(".expandArrow");
     const modelsContainer = providerGroup.querySelector(".providerModels");
+    const providerHideBtn = header.querySelector(".providerHideBtn");
 
     if (collapsedProviders[providerName]) {
       arrow.innerHTML = "▶";
       modelsContainer.style.display = "none";
       header.setAttribute("aria-expanded", "false");
+      if (providerHideBtn) providerHideBtn.style.display = "none";
     } else {
       arrow.innerHTML = "▼";
       modelsContainer.style.display = "block";
       header.setAttribute("aria-expanded", "true");
+      if (providerHideBtn) providerHideBtn.style.display = "inline-flex";
     }
   }
 }
@@ -1373,7 +1428,25 @@ function toggleAllProviders() {
     "collapsedProviders",
     JSON.stringify(collapsedProviders)
   );
+  
+  // Update button icon
+  updateExpandCollapseBtnIcon();
   renderModelList();
+}
+
+// Update expand/collapse button icon based on current state
+function updateExpandCollapseBtnIcon() {
+  const btn = document.getElementById("expandCollapseBtn");
+  if (!btn) return;
+  
+  const allCollapsed = Object.values(collapsedProviders).every(
+    (v) => v === true
+  );
+  
+  // If all are collapsed, show ▶ (expand), otherwise show ▼ (collapse)
+  btn.textContent = allCollapsed ? "▶" : "▼";
+  btn.setAttribute("aria-label", allCollapsed ? "Expand all provider groups" : "Collapse all provider groups");
+  btn.title = allCollapsed ? "Expand All" : "Collapse All";
 }
 
 document.getElementById("refreshModels").onclick = () => loadModels(true);
@@ -1423,6 +1496,16 @@ function renderHistory() {
   }
 
   historyListEl.innerHTML = "";
+
+  // Show/hide clearHistory button based on whether there's history
+  const clearHistoryBtn = document.getElementById("clearHistory");
+  if (clearHistoryBtn) {
+    if (!history || history.length === 0) {
+      clearHistoryBtn.style.display = "none";
+    } else {
+      clearHistoryBtn.style.display = "inline-flex";
+    }
+  }
 
   if (!history || history.length === 0) {
     const li = document.createElement("li");
@@ -1489,14 +1572,19 @@ function selectModel(id) {
     return;
   }
 
-  // Otherwise show the details panel (no response / error)
-  selectedModelInfoEl.classList.remove("hidden");
-  selectedModelAnswerEl.classList.remove("hidden");
+  // Otherwise show the details panel (no response / error) only if there is a question
+  if (lastQuestion) {
+    selectedModelInfoEl.classList.remove("hidden");
+    selectedModelAnswerEl.classList.remove("hidden");
 
-  // Hide sidebar on mobile so the details panel is visible
-  if (isMobile()) {
-    isSidebarCollapsed = true;
-    applyCollapseState();
+    // Hide sidebar on mobile so the details panel is visible
+    if (isMobile()) {
+      isSidebarCollapsed = true;
+      applyCollapseState();
+    }
+  } else {
+    selectedModelInfoEl.classList.add("hidden");
+    selectedModelAnswerEl.classList.add("hidden");
   }
 
   // Build modelHeader with icon and title
@@ -1768,12 +1856,36 @@ async function askSingleModel(question, modelId) {
 // COMPARISON TABLE
 // ===============================
 function renderComparisonTable() {
-  console.debug("renderComparisonTable() called", { lastQuestion, answersCount: Object.keys(answers).length });
+  console.log("renderComparisonTable() called", { lastQuestion, answersCount: Object.keys(answers).length });
   // Always clear previous comparison content so switching history or models
   // replaces the table instead of appending to older results.
   if (comparisonTableEl) comparisonTableEl.innerHTML = "";
+  comparisonTableEl?.classList.remove("hidden");
   if (!lastQuestion || !Object.keys(answers).length) {
-    // already cleared above
+    console.log("Showing welcome message");
+    // Clear successful models when no results
+    successfulModels = [];
+    updateQuestionButtonState();
+    // Show welcome message when no results
+    if (welcomeMessageEl) {
+      const subtitleEl = document.getElementById("welcomeSubtitle");
+      if (subtitleEl) {
+        subtitleEl.textContent = t("appSubtitle");
+      }
+      const adviceEl = document.getElementById("welcomeAdvice");
+      if (adviceEl) {
+        adviceEl.textContent = t("appAdvice");
+      }
+      const newQuestionBtn = document.getElementById("welcomeNewQuestionBtn");
+      if (newQuestionBtn) {
+        newQuestionBtn.onclick = handleQuestionButtonClick;
+        newQuestionBtn.textContent = t("ask");
+      }
+      welcomeMessageEl.classList.remove("hidden");
+    }
+    if (comparisonTableEl) {
+      comparisonTableEl.classList.add("hidden");
+    }
     // clear any previously set spacing/vars on tables
     if (comparisonTableEl) {
       comparisonTableEl.querySelectorAll(":scope > table.compare").forEach((t) => {
@@ -1790,6 +1902,14 @@ function renderComparisonTable() {
       // setMobileControlsVisible(false);
     }
     return;
+  } else {
+    // Hide welcome message when there are results
+    if (welcomeMessageEl) {
+      welcomeMessageEl.classList.add("hidden");
+    }
+    if (comparisonTableEl) {
+      comparisonTableEl.classList.remove("hidden");
+    }
   }
 
   // Separate successful and failed responses
@@ -1811,6 +1931,9 @@ function renderComparisonTable() {
 
   // Track successful models for "Select Successful" button
   successfulModels = Object.keys(successfulAnswers);
+
+  // Update button states
+  updateQuestionButtonState();
 
   console.debug("renderComparisonTable building tables", { successful: Object.keys(successfulAnswers).length, failed: Object.keys(failedAnswers).length });
 
@@ -1876,26 +1999,39 @@ function renderComparisonTable() {
       modelIds.forEach((id) => {
         const ans = successfulAnswers[id];
         const speedClass = getSpeedClass(ans.time);
-        
+
         const item = document.createElement('div');
         item.className = 'modelListItem';
         item.dataset.modelId = id;
-        
+
         // Icon (safe, comes from function)
         item.innerHTML = getModelIcon(id);
-        
+
+        // Determine provider and display name (omit provider prefix from visible name)
+        const modelObj = models.find((m) => m.id === id) || {};
+        const providerName = modelObj.provider || "";
+        let displayName = id;
+        try {
+          if (providerName && typeof displayName === 'string') {
+            const prefix = new RegExp('^' + providerName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '-?', 'i');
+            displayName = displayName.replace(prefix, '');
+          }
+        } catch (e) {}
+
         // Model name (safe from textContent)
         const nameSpan = document.createElement('span');
         nameSpan.className = 'modelName';
-        nameSpan.textContent = id;
+        nameSpan.textContent = displayName;
+        // Store provider in title attribute as requested
+        item.title = providerName || id;
         item.appendChild(nameSpan);
-        
+
         // Response time (safe from textContent)
         const timeSpan = document.createElement('span');
         timeSpan.className = `modelTime ${speedClass}`;
         timeSpan.textContent = `${ans.time}ms`;
         item.appendChild(timeSpan);
-        
+
         modelListContainer.appendChild(item);
       });
     }
@@ -2544,7 +2680,11 @@ document.getElementById("deselectAllBtn")?.addEventListener("click", () => {
 // Select successful models button
 document.getElementById("selectSuccessfulBtn")?.addEventListener("click", () => {
   if (successfulModels.length === 0) {
-    showMessage(t("selectSuccessfulNoResults"));
+    if (Object.keys(answers).length === 0) {
+      showMessage(t("noAnswersYet") || "No answers yet - ask a question first");
+    } else {
+      showMessage(t("selectSuccessfulNoResults"));
+    }
     return;
   }
   selectSuccessfulModels();
@@ -2634,6 +2774,10 @@ function applyTheme() {
     const themeIcons = {
       dark: '🌙',
       light: '☀️',
+      'light-blue': '🔵',
+      'light-mint': '💚',
+      'light-purple': '🟣',
+      'light-rose': '🌹',
       blue: '💙',
       ocean: '🌊',
       sunset: '🌅',
@@ -2641,7 +2785,17 @@ function applyTheme() {
       purple: '💜'
     };
     themeBtn.textContent = themeIcons[theme] || '🌙';
-    const themeKey = 'theme' + theme.charAt(0).toUpperCase() + theme.slice(1);
+    
+    // Build theme key for translation
+    let themeKey;
+    if (theme.includes('-')) {
+      // Handle hyphenated theme names: 'light-blue' -> 'themeLightBlue'
+      const parts = theme.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1));
+      themeKey = 'theme' + parts.join('');
+    } else {
+      // Handle single-word theme names: 'dark' -> 'themeDark'
+      themeKey = 'theme' + theme.charAt(0).toUpperCase() + theme.slice(1);
+    }
     themeBtn.title = t(themeKey) || theme;
   }
 }
@@ -2667,7 +2821,9 @@ loadModels();
 loadFailedModels();
 renderHistory();
 applyTranslations();
+renderComparisonTable(); // Ensure subtitle is shown initially
 applyTheme(); // Apply saved theme on load
+updateExpandCollapseBtnIcon(); // Initialize expand/collapse button icon
 typingIndicator.classList.add("hidden"); // Ensure typing indicator is hidden
 initMobileLayout();
 updateQuestionButtonState(); // Initialize question button state
@@ -2698,6 +2854,14 @@ const questionModalContent = document.getElementById('questionModalContent');
 const openQuestionBtn = document.getElementById('openQuestionBtn');
 const closeQuestionBtn = document.getElementById('closeQuestionModal');
 const headerContentEl = document.getElementById('headerContent');
+
+function handleQuestionButtonClick() {
+  if (selectedModels.length === 0) {
+    showMessage(t("noModelsSelected"), 4000);
+    return;
+  }
+  openQuestionModal();
+}
 
 function openQuestionModal() {
   if (!questionModal) return;
@@ -2741,12 +2905,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (ob) ob.addEventListener('click', (e) => {
     e.preventDefault();
-    // Check if button is disabled (no models selected)
-    if (ob.classList.contains('disabled')) {
-      showMessage(t("noModelsSelected"));
-      return;
-    }
-    openQuestionModal();
+    handleQuestionButtonClick();
   });
 
   if (cb) cb.addEventListener('click', (e) => {

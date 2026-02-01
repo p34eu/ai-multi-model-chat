@@ -1,34 +1,37 @@
 <!DOCTYPE html>
 <html lang="bg">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-    content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
-  <meta name="keywords"
-    content="AI, artificial intelligence, model comparison, Llama, Gemma, Qwen, Mixtral, chatbots" />
-  <title>AI Model Comparison Tool - Compare Multiple AI Responses</title>
-  <link rel="icon" href="/favicon.png" type="image/png" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <meta name="description"
+      content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta name="keywords"
+      content="AI, artificial intelligence, model comparison, Llama, Gemma, Qwen, Mixtral, chatbots" />
+    <title></title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
 
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="%VITE_APP_URL%/" />
-  <meta property="og:title" content="AI Model Comparison Tool" />
-  <meta property="og:description"
-    content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
-  <meta property="og:image" content="%VITE_APP_URL%/og-image.png" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="%VITE_APP_URL%/" />
+    <meta property="og:title" content="AI Model Comparison Tool" />
+    <meta property="og:description"
+      content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta property="og:image" content="%VITE_APP_URL%/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
 
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="%VITE_APP_URL%/" />
-  <meta property="twitter:title" content="AI Models Compare" />
-  <meta property="twitter:description"
-    content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
-  <meta property="twitter:image" content="%VITE_APP_URL%/twitter-card.png" />
-  <script type="application/ld+json">
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="%VITE_APP_URL%/" />
+    <meta property="twitter:title" content="AI Models Compare" />
+    <meta property="twitter:description"
+      content="Compare responses from multiple AI models simultaneously. Test Llama, Gemma, Qwen, Mixtral and other AI models side by side with real-time performance tracking." />
+    <meta property="twitter:image" content="%VITE_APP_URL%/twitter-card.png" />
+    <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "WebApplication",
@@ -50,206 +53,248 @@
         ]
       }
     </script>
-  <!-- Load stylesheet non-blocking: preload then switch to stylesheet onload, with noscript fallback -->
-  <link rel="preload" href="/src/style.css" as="style" onload="this.rel='stylesheet'">
-  <noscript>
-    <link rel="stylesheet" href="/src/style.css">
-  </noscript>
+    <!-- Load stylesheet non-blocking: preload then switch to stylesheet onload, with noscript fallback -->
+    <link rel="preload" href="/src/style.css" as="style" onload="this.rel='stylesheet'">
+    <noscript>
+      <link rel="stylesheet" href="/src/style.css">
+    </noscript>
 
-  <script type="module" src="/src/app.js"></script>
-</head>
+    <script type="module" src="/src/app.js"></script>
+  </head>
 
-<body>
-  <a href="#mainArea" class="skip-link">Skip to main content</a>
-  <div id="app">
-    <header id="topBar">
-      <div id="headerContent">
-        <div class="headerButtons">
-          <button id="toggleSidebarBtn" class="toggle-btn" aria-label="Toggle sidebar">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-          <button id="toggleResultsPanelBtn2" class="toggle-btn hidden" aria-label="Toggle results panel">
-            📊
-          </button>
-          <button id="themeToggleBtn" class="toggle-btn" aria-label="Toggle theme">
-            ☀️
-          </button>
-        </div>
-        <h1 id="title" data-i18n="appTitle">AI Model Comparison Tool</h1>
-        <div>
-          <button id="openQuestionBtn" class="toggle-btn" aria-label="Open question modal"></button>
-        </div>
-      </div>
-      <form id="questionArea" role="search" aria-label="AI model comparison query">
-        <label for="message" class="sr-only">Enter your question for AI models</label>
-        <textarea id="message" rows="2" placeholder="Напиши въпрос, който всички модели да отговорят..."
-          aria-describedby="message-help"></textarea>
-        <span id="message-help" class="sr-only">This question will be sent to all selected AI models for
-          comparison</span>
-        <button id="sendBtn" type="submit">Сравни всички модели</button>
-      </form>
-    </header>
-
-    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
-    <main id="mainArea">
-      <aside id="sidePanel" aria-label="Model selection and history">
-        <div id="bottomBar">
-          <a href="https://github.com/p34eu/ai-multi-model-chat" class="toggle-btn github-badge"
-            aria-label="View on GitHub">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path
-                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            GitHub
-          </a>
-
-          <nav id="languageSwitcher" aria-label="Language selection">
-            <button id="langBg" class="lang-btn" aria-label="Switch to Bulgarian">
-              BG
+  <body>
+    <a href="#mainArea" class="skip-link">Skip to main content</a>
+    <div id="app">
+      <header id="topBar">
+        <div id="headerContent">
+          <div class="headerButtons">
+            <button id="toggleSidebarBtn" class="toggle-btn" aria-label="Toggle sidebar">
+              <span></span>
+              <span></span>
+              <span></span>
             </button>
-            <button id="langEn" class="lang-btn" aria-label="Switch to English">
-              EN
+            <button id="toggleResultsPanelBtn2" class="toggle-btn hidden" aria-label="Toggle results panel">
+              📊
+            </button>
+            <button id="openQuestionBtn" class="toggle-btn" aria-label="Open question modal"></button>
+
+          </div>
+          <h1 id="title" data-i18n="appTitle">AI Model Comparison Tool</h1>
+
+        </div>
+        <form id="questionArea" role="search" aria-label="AI model comparison query">
+          <label for="message" class="sr-only">Enter your question for AI models</label>
+          <textarea id="message" rows="2" placeholder="Напиши въпрос, който всички модели да отговорят..."
+            aria-describedby="message-help"></textarea>
+          <span id="message-help" class="sr-only">This question will be sent to all selected AI models for
+            comparison</span>
+          <button id="sendBtn" type="submit">Сравни всички модели</button>
+
+        </form>
+      </header>
+
+      <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+      <main id="mainArea">
+        <aside id="sidePanel" aria-label="Model selection and history">
+
+          <nav class="tab-nav" role="tablist">
+            <button id="modelsTab" class="tab-btn active" role="tab" aria-selected="true" aria-controls="modelsPanel">
+              <span data-i18n="modelsTab">Модели</span>
+            </button>
+            <button id="historyTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="historyPanel">
+              <span data-i18n="history">История</span>
+            </button>
+            <button id="failedTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="failedPanel">
+              <span data-i18n="failedModels">Неуспешни</span>
+            </button>
+            <button id="closeSidebarBtn" class="close-sidebar-btn" aria-label="Close sidebar">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 4L4 12M4 4l8 8" />
+              </svg>
             </button>
           </nav>
-        </div>
-        <nav class="tab-nav" role="tablist">
-          <button id="modelsTab" class="tab-btn active" role="tab" aria-selected="true" aria-controls="modelsPanel">
-            <span data-i18n="models">Модели</span>
-          </button>
-          <button id="historyTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="historyPanel">
-            <span data-i18n="history">История</span>
-          </button>
-          <button id="failedTab" class="tab-btn" role="tab" aria-selected="false" aria-controls="failedPanel">
-            <span data-i18n="failedModels">Неуспешни</span>
-          </button>
-          <button id="closeSidebarBtn" class="close-sidebar-btn" aria-label="Close sidebar">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 4L4 12M4 4l8 8" />
-            </svg>
-          </button>
-        </nav>
 
-        <div class="tab-content">
-          <section id="modelsPanel" class="tab-panel active" role="tabpanel" aria-labelledby="modelsTab">
-            <div class="sectionHeader">
-              <div class="header-buttons">
-                <div id="modelsCount">
+          <div class="tab-content">
+            <section id="modelsPanel" class="tab-panel active" role="tabpanel" aria-labelledby="modelsTab">
+              <div class="sectionHeader">
+                <div class="header-buttons">
+
+                  <button id="expandCollapseBtn" class="btn" aria-label="Expand or collapse all provider groups"
+                    title="Expand/Collapse All">
+                    ▶
+                  </button>
+                  <button id="refreshModels" class="btn" aria-label="Refresh available models"
+                    title="Refresh model list">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true">
+                      <path d="M19 4v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <path d="M5 20v-5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <path d="M5.5 9A7 7 0 0 1 12 5h1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                      <path d="M18.5 15A7 7 0 0 1 12 19H10.5" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button id="resetCache" class="btn" aria-label="Reset model cache"
+                    title="Reset cached model statuses">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                      aria-hidden="true">
+                      <circle cx="8" cy="8" r="6" />
+                    </svg>
+                  </button>
+                  <button id="selectAllBtn" class="btn" aria-label="Select all models" title="Select All">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"> <!-- квадрат -->
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                      <!-- чек -->
+                      <path d="M8 12.5L11 15.5L16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                  </button>
+                  <button id="deselectAllBtn" class="btn" aria-label="Deselect all models" title="Deselect All">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true"> <!-- квадрат -->
+                      <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2" />
+                      <!-- X -->
+                      <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                  </button>
+                  <button id="selectSuccessfulBtn" class="btn" aria-label="Select all last successful models"
+                    title="Select Last Successful">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+                      aria-hidden="true">
+                      <!-- часовник -->
+                      <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" />
+                      <path d="M12 8v4l2.5 1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+
+
+                    </svg>
+
+
+
+                  </button>
+
+
                 </div>
-                <button id="expandCollapseBtn" class="btn" aria-label="Expand or collapse all provider groups"
-                  title="Expand/Collapse All">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M4 6l4 4 4-4" />
-                  </svg>
-                </button>
-                <button id="refreshModels" class="btn" aria-label="Refresh available models" title="Refresh model list">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M8 3a5 5 0 1 0 4.546 2.914" />
-                    <path d="M8 1v3l3 2" />
-                  </svg>
-                </button>
-                <button id="resetCache" class="btn" aria-label="Reset model cache" title="Reset cached model statuses">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M2 10a6 6 0 1 0 0-12 6 6 0 0 0 0 12z" />
-                    <path d="M2 4l2 2 2-2" />
-                  </svg>
-                </button>
-                <button id="selectAllBtn" class="btn" aria-label="Select all models" title="Select All">
-                  ✓
-                </button>
-                <button id="deselectAllBtn" class="btn" aria-label="Deselect all models" title="Deselect All">
-                  ✗
-                </button>
-                <button id="selectSuccessfulBtn" class="btn" aria-label="Select all last successful models" title="Select Last Successful">
-                  ✓✓
-                </button>
-
-                <span id="selectedCount" class="selectedCount">0/0</span>
+                <div id="modelsCount"></div>
+                <div id="selectedCount" class="selectedCount" title="Selected/Total">0/0</div>
               </div>
-            </div>
-            <ul id="modelList" aria-label="Available AI models"></ul>
-          </section>
+              <ul id="modelList" aria-label="Available AI models"></ul>
+            </section>
 
-          <section id="historyPanel" class="tab-panel" role="tabpanel" aria-labelledby="historyTab">
-            <div class="sectionHeader">
-              <div class="header-buttons">
-                <button id="clearHistory" class="btn" aria-label="Clear search history" title="Clear search history saved to your browser's local storage.">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M3 6h10" />
-                    <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6" />
-                    <path d="M4 3h8l-1-2H5L4 3z" />
-                  </svg>
-                </button>
+            <section id="historyPanel" class="tab-panel" role="tabpanel" aria-labelledby="historyTab">
+              <div class="sectionHeader">
+                <div class="header-buttons">
+                  <button id="clearHistory" class="btn" aria-label="Clear search history"
+                    title="Clear search history saved to your browser's local storage.">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                      aria-hidden="true">
+                      <path d="M3 6h10" />
+                      <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6" />
+                      <path d="M4 3h8l-1-2H5L4 3z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-            </div>
-            <ul id="historyList" aria-label="Previous queries"></ul>
-          </section>
+              <ul id="historyList" aria-label="Previous queries"></ul>
+            </section>
 
-          <section id="failedPanel" class="tab-panel" role="tabpanel" aria-labelledby="failedTab">
-            <div class="sectionHeader">
-              <div class="header-buttons">
-                <button id="refreshFailedBtn" class="btn" aria-label="Refresh failed models" title="Refresh failed models">⟳</button>
-                <button id="restoreSelectedFailedBtn" class="btn" aria-label="Restore selected failed models" title="Restore selected failed models" disabled>
-                  📥 Възстанови
-                </button>
-                <button id="clearAllFailedBtn" class="btn" aria-label="Clear all failed models" title="Restore all failed models to active list">
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path d="M3 6h10" />
-                    <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6" />
-                    <path d="M4 3h8l-1-2H5L4 3z" />
-                  </svg>
-                </button>
+            <section id="failedPanel" class="tab-panel" role="tabpanel" aria-labelledby="failedTab">
+              <div class="sectionHeader">
+                <div class="header-buttons">
+                  <button id="refreshFailedBtn" class="btn" aria-label="Refresh failed models"
+                    title="Refresh failed models">⟳</button>
+                  <button id="restoreSelectedFailedBtn" class="btn" aria-label="Restore selected failed models"
+                    title="Restore selected failed models" disabled>
+                    📥 Възстанови
+                  </button>
+                  <button id="clearAllFailedBtn" class="btn" aria-label="Clear all failed models"
+                    title="Restore all failed models to active list">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"
+                      aria-hidden="true">
+                      <path d="M3 6h10" />
+                      <path d="M5 6v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6" />
+                      <path d="M4 3h8l-1-2H5L4 3z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
+              <ul id="failedModelsList" role="list" aria-label="Failed models"></ul>
+            </section>
+          </div>
+          <div id="bottomBar">
+            <a href="https://github.com/p34eu/ai-multi-model-chat"  title="View on GitHub" class="btn"
+              aria-label="View on GitHub">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path
+                  d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+              </svg> 
+            </a>
+
+            <nav id="languageSwitcher" aria-label="Language selection">
+              <button id="themeToggleBtn" class="lang-btn" aria-label="Toggle theme">
+                ☀️
+              </button>
+              <button id="langBg" class="lang-btn" aria-label="Switch to Bulgarian">
+                BG
+              </button>
+              <button id="langEn" class="lang-btn" aria-label="Switch to English">
+                EN
+              </button>
+            </nav>
+          </div>
+        </aside>
+
+        <aside id="resultsPanel" class="hidden" aria-label="Results summary">
+
+          <div class="resultsPanelLabel">
+            <h3 id="resultsPanelTitle">Получени резултати </h3>
+
+            <button id="clearResultsBtn" title="">🗑</button>
+
+
+          </div>
+          <div id="resultsPanelContent"></div>
+        </aside>
+
+        <div id="chatPanel" class="hidden" aria-label="Chat with AI model"></div>
+
+        <section id="chatSection" aria-label="AI model responses and comparison">
+          <div id="typingIndicator" class="hidden" aria-live="polite" role="status">
+            <div class="loading-spinner"></div>
+            <span id="typingText">Моделите отговарят…</span>
+          </div>
+
+          <div id="selectedModelInfo" class="hidden" role="region" aria-label="Selected model information"></div>
+          <div id="selectedModelAnswer" class="hidden" role="region" aria-label="Selected model response"></div>
+
+          <div id="resultsHeader"></div>
+          <div id="welcomeMessage" class="jumbotron hidden" role="region" aria-label="Welcome message">
+            <div class="jumbotron-content">
+              <div class="jumbotron-row">
+                <p id="welcomeSubtitle"></p>
+                <button id="welcomeNewQuestionBtn" class="toggle-btn">Ask a Question</button>
+              </div>
+              <p id="welcomeAdvice" class="welcome-advice"></p>
             </div>
-            <div id="failedModelsList" role="list" aria-label="Failed models"></div>
-          </section>
+          </div>
+          <div id="comparisonTable" role="region" aria-label="AI model comparison results"></div>
+        </section>
+      </main>
+
+      <!-- Question modal (inserted here so it is available to JS) -->
+      <div id="questionModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Ask a question">
+        <div id="questionModalOverlay" class="modalOverlay" tabindex="-1"></div>
+        <div id="questionModalContent" class="modalContent">
+          <button id="closeQuestionModal" class="close-modal-btn" aria-label="Close question modal">✕</button>
+          <!-- The #questionArea form will be moved here by JS on desktop, and appended on mobile when opening -->
         </div>
-      </aside>
-
-      <aside id="resultsPanel" class="hidden" aria-label="Results summary">
-
-        <div class="resultsPanelLabel">
-          <h3 id="resultsPanelTitle">Получени резултати </h3>    
-      
-            <button id="clearResultsBtn" title="" >🗑</button>
-           
-         
-        </div>
-        <div id="resultsPanelContent"></div>
-      </aside>
-
-      <div id="chatPanel" class="hidden" aria-label="Chat with AI model"></div>
-
-      <section id="chatSection" aria-label="AI model responses and comparison">
-        <div id="typingIndicator" class="hidden" aria-live="polite" role="status">
-          <div class="loading-spinner"></div>
-          <span id="typingText">Моделите отговарят…</span>
-        </div>
-
-        <div id="selectedModelInfo" class="hidden" role="region" aria-label="Selected model information"></div>
-        <div id="selectedModelAnswer" class="hidden" role="region" aria-label="Selected model response"></div>
-
-        <div id="resultsHeader"></div>
-        <div id="comparisonTable" role="region" aria-label="AI model comparison results"></div>
-      </section>
-    </main>
-
-    <!-- Question modal (inserted here so it is available to JS) -->
-    <div id="questionModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Ask a question">
-      <div id="questionModalOverlay" class="modalOverlay" tabindex="-1"></div>
-      <div id="questionModalContent" class="modalContent">
-        <button id="closeQuestionModal" class="close-modal-btn" aria-label="Close question modal">✕</button>
-        <!-- The #questionArea form will be moved here by JS on desktop, and appended on mobile when opening -->
       </div>
-    </div>
 
-  </div>
-</body>
+    </div>
+  </body>
 
 </html>
