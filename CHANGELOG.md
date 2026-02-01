@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.3...v1.4.0) (2026-02-01)
+
+
+### Features
+
+* added introduction ([c95c4ee](https://github.com/p34eu/ai-multi-model-chat/commit/c95c4ee0014aaa7edab2afdee254de97a99b4a9e))
+
 ## [1.3.3](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.2...v1.3.3) (2026-01-30)
 
 
