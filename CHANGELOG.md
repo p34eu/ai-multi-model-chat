@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/p34eu/ai-multi-model-chat/compare/v1.4.0...v1.4.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* add trust proxy setting in express server ([419f19f](https://github.com/p34eu/ai-multi-model-chat/commit/419f19f19ff819c004437661ae2d4e8e4366474e))
+
 # [1.4.0](https://github.com/p34eu/ai-multi-model-chat/compare/v1.3.3...v1.4.0) (2026-02-01)
 
 
