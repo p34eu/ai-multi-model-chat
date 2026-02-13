@@ -1,6 +1,8 @@
 # AI Multi-Model Chat
 
-An intelligent tool for comparing responses from multiple AI models in real-time. Allows simultaneous querying of multiple models and visual comparison of results.
+Web based tool for comparing responses from multiple AI models. 
+Allows simultaneous querying of multiple models and visual comparison of results. 
+It is also possible to continue chat with sinle chosen model within the results.
 
 [![CI](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/p34eu/ai-multi-model-chat/actions/workflows/ci.yml)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org/)
@@ -132,34 +134,23 @@ npm install
 
 ```env
 # Groq (Fast inference, Llama/Gemma models)
-GROQ_API_KEY=your_groq_api_key_here
-
-# OpenAI (GPT models) - Optional
-OPENAI_API_KEY=your_openai_api_key_here
-
-# Anthropic (Claude models) - Optional
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
-
-# Google AI (Gemini models) - Optional
-GOOGLE_API_KEY=your_google_ai_api_key_here
-
-# Mistral AI - Optional
-MISTRAL_API_KEY=your_mistral_api_key_here
-
-# Cohere - Optional
-COHERE_API_KEY=your_cohere_api_key_here
-
-# DeepSeek - Optional
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
-
-# OpenRouter - Optional
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-
-# Hugging Face - Optional
-HUGGINGFACE_API_KEY=your_huggingface_api_key_here
-
-# Application URL (for social sharing meta tags)
-VITE_APP_URL=https://your-domain.com
+GROQ_API_KEY=
+# OpenAI (GPT models)
+OPENAI_API_KEY=
+# Anthropic (Claude models)l
+ANTHROPIC_API_KEY=
+# Google AI (Gemini models)
+GOOGLE_API_KEY=
+# Mistral AI
+MISTRAL_API_KEY=
+# Cohere 
+COHERE_API_KEY=
+# DeepSeek 
+DEEPSEEK_API_KEY=
+# OpenRouter
+OPENROUTER_API_KEY=
+# Hugging Face
+HUGGINGFACE_API_KEY=
 ```
 
 4. Start the application:
@@ -169,95 +160,6 @@ npm start
 ```
 
 The application will be available at `http://localhost:3003`
-
-## 🛠️ Development
-
-### Development Server
-
-For development with hot reload and API proxying:
-
-```bash
-npm run dev
-```
-
-### Production Build
-
-To build the application with cache busting:
-
-```bash
-npm run build
-```
-
-### Build and Start
-
-To build and start the production server:
-
-```bash
-npm run build:start
-```
-
-### Testing
-
-```bash
-npm test
-```
-
-##  CI/CD
-
-This project uses GitHub Actions for continuous integration and deployment:
-
-- **CI Pipeline**: Automated testing on multiple Node.js versions
-- **CodeQL**: Security vulnerability scanning
-- **Dependency Review**: Automated dependency security checks
-- **Performance Monitoring**: Lighthouse performance, accessibility, and SEO checks
-- **Release Automation**: Automated releases on version tags   
-- **Stale Management**: Automatic cleanup of inactive issues/PRs
-- **Dependabot**: Automated dependency updates
-
-##  Project Structure
-```
-├── public/           # Frontend files
-│   ├── index.html    # Main page with provider grouping UI
-│   ├── style.css     # Styles with provider group styling
-│   ├── app.js        # Client logic with collapse/expand functionality
-│   └── favicon.png   # Icon
-├── routes/           # API routes
-│   ├── models.js     # Models endpoint with smart filtering
-│   └── chat.js       # Chat endpoint with streaming support
-├── server.js         # Main server file
-├── test.js           # Tests
-├── SECURITY.md       # Security policy
-├── package.json      # Dependencies
-└── .gitignore        # Ignored files
-```
-
-## 🚀 Deployment
-
-### LiteSpeed Server
-
-This application is configured for LiteSpeed web server with reverse proxy:
-
-- **Reverse Proxy**: Forwards requests to Node.js backend
-- **WebSocket Support**: Handles real-time streaming connections
-- **Compression**: Automatic compression for faster loading
-- **Static Files**: Direct serving of built assets
-
-### PM2 Process Management
-
-```bash
-# Start production servers
-pm2 start app.yml
-
-# Check status
-pm2 list
-
-# Restart services
-pm2 restart {id|name}
-```
-
-### Environment Variables
-
-Configure API keys for different AI providers in `.env` file.
 
 ## 🎯 Usage
 
@@ -276,17 +178,8 @@ Configure API keys for different AI providers in `.env` file.
 
 ### Supported Models
 
-The application automatically filters and displays only chat-capable models from all configured providers:
+The application automatically filters and displays only chat-capable models from all configured providers
 
-- **Groq**: 13 models (Llama, Qwen, Mixtral variants)
-- **OpenAI**: 36 models (GPT-4, GPT-4o, GPT-4o-mini variants)
-- **Anthropic**: 7 models (Claude-3 variants)
-- **Google AI**: 8 models (Gemini variants)
-- **Mistral**: 9 models (inactive - requires API key)
-- **Cohere**: 9 models
-- **DeepSeek**: deepseek-chat
-- **OpenRouter**: Multiple models including Claude, Gemini, Llama, Mistral
-- **Hugging Face**: Multiple models including Mistral, Zephyr, Phi-3
 
 ## 🤝 Contributing
 
