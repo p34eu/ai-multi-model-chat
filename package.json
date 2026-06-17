@@ -22,7 +22,7 @@
     "express": "^5.2.1",
     "express-rate-limit": "^8.2.1",
     "node-fetch": "^3.3.2",
-    "sharp": "^0.34.5"
+    "sharp": "^0.35.1"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
